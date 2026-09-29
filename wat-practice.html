@@ -1,0 +1,1491 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#172017">
+  <meta name="description" content="A standalone Qiyadat Word Association Test practice prototype for timed typing and paper sessions.">
+  <title>WAT Practice — Qiyadat</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23172017'/%3E%3Cpath d='M17 17h30v22L32 50 17 39V17Z' fill='none' stroke='%23c9a85c' stroke-width='4'/%3E%3Cpath d='M24 26h16M24 33h10' stroke='%23f3efdf' stroke-width='4'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --olive-950: #172017;
+      --olive-900: #1e2a1f;
+      --olive-800: #293829;
+      --olive-700: #3b4b38;
+      --khaki: #c8bd98;
+      --sand: #ded4b9;
+      --paper: #f3efdf;
+      --white: #fffdf6;
+      --ink: #172017;
+      --muted: #61665d;
+      --brass: #b58b3a;
+      --brass-light: #d5b56d;
+      --danger: #8e473e;
+      --danger-dark: #6f332c;
+      --line: rgba(23, 32, 23, 0.18);
+      --focus: #e1be6a;
+      --shadow: 0 18px 50px rgba(23, 32, 23, 0.15);
+      --radius: 3px;
+      --content: 920px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { width: 100%; }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body.session-active { background: var(--olive-900); }
+
+    button, input { font: inherit; }
+    button, label { -webkit-tap-highlight-color: transparent; }
+    [hidden] { display: none !important; }
+
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      z-index: 100;
+      padding: 10px 14px;
+      color: var(--ink);
+      background: var(--white);
+      transform: translateY(-160%);
+    }
+
+    .skip-link:focus { transform: translateY(0); }
+
+    .site-header {
+      position: relative;
+      z-index: 10;
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      color: var(--white);
+      background: var(--olive-950);
+      border-bottom: 1px solid rgba(213, 181, 109, 0.35);
+    }
+
+    .header-inner {
+      width: min(100% - 28px, var(--content));
+      margin-inline: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--white);
+      text-decoration: none;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .brand-mark {
+      width: 27px;
+      height: 31px;
+      display: grid;
+      place-items: center;
+      color: var(--brass-light);
+      border: 1px solid currentColor;
+      clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+
+    .screen-name {
+      color: rgba(255, 253, 246, 0.58);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    main { min-height: calc(100dvh - 66px); }
+
+    .container {
+      width: min(100% - 28px, var(--content));
+      margin-inline: auto;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 13px;
+      color: var(--brass);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 24px;
+      height: 2px;
+      background: currentColor;
+      content: "";
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1, h2, h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.08;
+      text-wrap: balance;
+    }
+
+    h1 {
+      margin-bottom: 16px;
+      font-size: clamp(2.25rem, 10vw, 4.25rem);
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-size: clamp(1.75rem, 7vw, 2.75rem);
+      letter-spacing: -0.025em;
+    }
+
+    h3 { margin-bottom: 9px; font-size: 1.08rem; }
+
+    .intro {
+      max-width: 650px;
+      margin-bottom: 30px;
+      color: var(--muted);
+    }
+
+    .start-screen { padding-block: 48px 64px; }
+
+    .setup-card {
+      display: grid;
+      gap: 28px;
+      padding: 22px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--brass);
+      box-shadow: var(--shadow);
+    }
+
+    .choice-group {
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .choice-group legend {
+      width: 100%;
+      margin-bottom: 11px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .segment { position: relative; min-width: 0; }
+
+    .segment input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      opacity: 0;
+    }
+
+    .segment label {
+      min-height: 66px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+    }
+
+    .segment strong { font-size: 0.9rem; }
+    .segment small { color: var(--muted); font-size: 0.72rem; line-height: 1.35; }
+
+    .segment input:checked + label {
+      color: var(--white);
+      background: var(--olive-800);
+      border-color: var(--olive-800);
+    }
+
+    .segment input:checked + label small { color: rgba(255, 253, 246, 0.65); }
+    .segment input:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .segment input:disabled + label { cursor: not-allowed; opacity: 0.7; }
+
+    .setup-details {
+      display: grid;
+      gap: 15px;
+      padding: 18px;
+      background: #ede7d4;
+      border-left: 3px solid var(--brass);
+    }
+
+    .duration {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .duration-item {
+      padding-right: 7px;
+      border-right: 1px solid var(--line);
+    }
+
+    .duration-item:last-child { border-right: 0; }
+
+    .duration-item strong {
+      display: block;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.1rem;
+    }
+
+    .duration-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .mode-explanation {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .button {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      color: var(--olive-950);
+      background: var(--brass-light);
+      border: 1px solid var(--brass-light);
+      border-radius: var(--radius);
+      font-weight: 800;
+      line-height: 1.2;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 140ms ease, background 140ms ease;
+    }
+
+    .button:hover:not(:disabled) { background: #dfc179; transform: translateY(-1px); }
+    .button:active:not(:disabled) { transform: translateY(0); }
+    .button:disabled { cursor: not-allowed; opacity: 0.45; }
+    .button-full { width: 100%; }
+
+    .button-secondary {
+      color: var(--ink);
+      background: transparent;
+      border-color: rgba(23, 32, 23, 0.38);
+    }
+
+    .button-secondary:hover:not(:disabled) { color: var(--white); background: var(--olive-800); }
+
+    .button-danger {
+      color: #fff;
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .button-danger:hover:not(:disabled) { background: var(--danger-dark); }
+
+    .practice-screen {
+      min-height: calc(100dvh - 66px);
+      padding-block: 16px 28px;
+      color: var(--white);
+      background-color: var(--olive-900);
+      background-image:
+        linear-gradient(rgba(213, 181, 109, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(213, 181, 109, 0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    .practice-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .session-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .tag {
+      padding: 5px 8px;
+      color: rgba(255, 253, 246, 0.72);
+      border: 1px solid rgba(255, 253, 246, 0.18);
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .end-button {
+      min-height: 44px;
+      flex: 0 0 auto;
+      padding: 9px 12px;
+      color: #f4d7d3;
+      background: transparent;
+      border: 1px solid rgba(232, 158, 150, 0.55);
+      border-radius: var(--radius);
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .end-button:hover { color: #fff; background: rgba(142, 71, 62, 0.28); }
+
+    .practice-card {
+      position: relative;
+      max-width: 720px;
+      margin-inline: auto;
+      padding: 18px;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--brass);
+      box-shadow: 10px 10px 0 rgba(8, 13, 8, 0.36);
+    }
+
+    .practice-meta {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      padding-bottom: 13px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .word-progress {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .timer-block {
+      min-width: 72px;
+      text-align: right;
+    }
+
+    .timer-number {
+      display: block;
+      color: var(--danger);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.65rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .timer-label {
+      color: var(--muted);
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .timer-track {
+      height: 7px;
+      overflow: hidden;
+      margin-top: 12px;
+      background: #d7d0bb;
+    }
+
+    .timer-fill {
+      width: 100%;
+      height: 100%;
+      background: var(--brass);
+      transform-origin: left;
+      transition: width 90ms linear;
+    }
+
+    .word-stage {
+      min-height: 210px;
+      display: grid;
+      place-items: center;
+      padding: 28px 6px 20px;
+      text-align: center;
+    }
+
+    .word-kicker {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .current-word {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(3rem, 17vw, 6.5rem);
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      overflow-wrap: anywhere;
+    }
+
+    .paused-notice {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 18px;
+      padding: 6px 9px;
+      color: var(--danger-dark);
+      background: #ead9ca;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .response-area { scroll-margin-top: 12px; }
+
+    .response-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .response-input {
+      width: 100%;
+      min-height: 52px;
+      padding: 12px 13px;
+      color: var(--ink);
+      background: var(--white);
+      border: 1px solid rgba(23, 32, 23, 0.42);
+      border-radius: 0;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    .response-input:disabled { color: var(--muted); background: #ded9c9; }
+
+    .input-help {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.74rem;
+    }
+
+    .paper-panel {
+      min-height: 92px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      background: #ece6d2;
+      border: 1px solid var(--line);
+    }
+
+    .notebook-icon {
+      width: 44px;
+      height: 52px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--olive-700);
+      background-image: repeating-linear-gradient(to bottom, transparent 0 9px, rgba(59, 75, 56, 0.18) 9px 10px);
+      font-size: 1.2rem;
+    }
+
+    .paper-panel strong { display: block; font-family: Georgia, "Times New Roman", serif; }
+    .paper-panel span { display: block; color: var(--muted); font-size: 0.78rem; }
+
+    .training-controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      margin-top: 14px;
+    }
+
+    .training-controls .button { min-width: 0; padding-inline: 8px; font-size: 0.82rem; }
+
+    .simulation-note {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 0.76rem;
+      text-align: center;
+    }
+
+    .summary-screen { padding-block: 44px 70px; }
+
+    .summary-header {
+      margin-bottom: 26px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .summary-header p:last-child { max-width: 640px; margin-bottom: 0; color: var(--muted); }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      min-height: 94px;
+      padding: 14px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--brass);
+    }
+
+    .stat-card strong {
+      display: block;
+      margin-bottom: 4px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.4rem;
+      line-height: 1.1;
+    }
+
+    .stat-card span {
+      color: var(--muted);
+      font-size: 0.67rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      line-height: 1.3;
+      text-transform: uppercase;
+    }
+
+    .answer-heading { margin-bottom: 16px; }
+
+    .answer-list {
+      display: grid;
+      gap: 9px;
+      margin: 0 0 28px;
+      padding: 0;
+      list-style: none;
+      counter-reset: response;
+    }
+
+    .answer-item {
+      position: relative;
+      padding: 15px 15px 15px 48px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      counter-increment: response;
+    }
+
+    .answer-item::before {
+      position: absolute;
+      top: 16px;
+      left: 15px;
+      color: var(--brass);
+      content: counter(response, decimal-leading-zero);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .answer-word {
+      display: block;
+      margin-bottom: 3px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .answer-text { margin: 0; color: var(--muted); overflow-wrap: anywhere; }
+    .answer-empty { font-style: italic; }
+
+    .summary-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    dialog {
+      width: min(calc(100% - 28px), 430px);
+      padding: 0;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--brass);
+      box-shadow: var(--shadow);
+    }
+
+    dialog::backdrop { background: rgba(8, 13, 8, 0.76); }
+
+    .dialog-body { padding: 24px; }
+    .dialog-body h2 { font-size: 1.65rem; }
+    .dialog-body p { margin-bottom: 22px; color: var(--muted); }
+    .dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .noscript {
+      margin: 20px auto;
+      padding: 16px;
+      color: #fff;
+      background: var(--danger-dark);
+    }
+
+    @media (min-width: 620px) {
+      .start-screen { padding-block: 68px 82px; }
+      .setup-card { grid-template-columns: 1fr 1fr; padding: 30px; }
+      .setup-details, .start-action { grid-column: 1 / -1; }
+      .practice-screen { padding-block: 28px 42px; }
+      .practice-card { padding: 26px; }
+      .word-stage { min-height: 290px; padding-block: 42px 28px; }
+      .summary-stats { grid-template-columns: repeat(4, 1fr); }
+      .answer-list { grid-template-columns: repeat(2, 1fr); }
+      .summary-actions .button { min-width: 210px; }
+    }
+
+    @media (min-width: 860px) {
+      .setup-card { gap: 36px; padding: 38px; }
+      .practice-card { padding: 32px; }
+      .word-stage { min-height: 330px; }
+    }
+
+    @media (max-width: 350px) {
+      .container, .header-inner { width: min(100% - 20px, var(--content)); }
+      .setup-card, .practice-card { padding-inline: 13px; }
+      .segment label { padding-inline: 8px; }
+      .training-controls { grid-template-columns: 1fr; }
+      .summary-stats { grid-template-columns: 1fr 1fr; }
+      .screen-name { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to practice</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html" aria-label="Qiyadat home">
+        <span class="brand-mark" aria-hidden="true">Q</span>
+        <span>Qiyadat</span>
+      </a>
+      <span class="screen-name">WAT practice</span>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="start-screen" id="start-screen" aria-labelledby="start-title">
+      <div class="container">
+        <p class="eyebrow">Word Association Test</p>
+        <h1 id="start-title">Choose how you want to practise.</h1>
+        <p class="intro">Each word stays on screen for a fixed time. Respond naturally, keep moving, and complete the set without returning to earlier words.</p>
+
+        <div class="setup-card">
+          <fieldset class="choice-group">
+            <legend>Session mode</legend>
+            <div class="segmented">
+              <div class="segment">
+                <input type="radio" name="session-mode" id="mode-training" value="training" checked>
+                <label for="mode-training"><strong>Training</strong><small>Pause, retry and move ahead</small></label>
+              </div>
+              <div class="segment">
+                <input type="radio" name="session-mode" id="mode-simulation" value="simulation">
+                <label for="mode-simulation"><strong>Simulation</strong><small>Automatic, uninterrupted pace</small></label>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="choice-group">
+            <legend>Response mode</legend>
+            <div class="segmented">
+              <div class="segment">
+                <input type="radio" name="response-mode" id="response-typing" value="typing" checked>
+                <label for="response-typing"><strong>Typing</strong><small>Enter responses on this device</small></label>
+              </div>
+              <div class="segment">
+                <input type="radio" name="response-mode" id="response-paper" value="paper">
+                <label for="response-paper"><strong>Paper</strong><small>Write responses in a notebook</small></label>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="setup-details">
+            <div class="duration" aria-label="Session duration information">
+              <div class="duration-item"><strong id="duration-words">20</strong><span>Words</span></div>
+              <div class="duration-item"><strong id="duration-seconds">15s</strong><span>Per word</span></div>
+              <div class="duration-item"><strong id="duration-total">5:00</strong><span>Maximum</span></div>
+            </div>
+            <p class="mode-explanation" id="mode-explanation">Training mode gives you pause, retry and next controls. Type each response directly into Qiyadat.</p>
+          </div>
+
+          <div class="start-action">
+            <button class="button button-full" id="start-button" type="button">Start session <span aria-hidden="true">→</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="practice-screen" id="practice-screen" aria-labelledby="current-word" hidden>
+      <div class="container">
+        <div class="practice-bar">
+          <div class="session-tags" aria-label="Current session settings">
+            <span class="tag" id="session-mode-tag">Training</span>
+            <span class="tag" id="response-mode-tag">Typing</span>
+          </div>
+          <button class="end-button" id="end-button" type="button">End session</button>
+        </div>
+
+        <div class="practice-card">
+          <div class="practice-meta">
+            <span class="word-progress" id="word-progress">Word 1 of 20</span>
+            <div class="timer-block" role="timer" aria-live="off" aria-label="15 seconds remaining">
+              <span class="timer-number" id="timer-number">15</span>
+              <span class="timer-label">seconds left</span>
+            </div>
+          </div>
+          <div class="timer-track" aria-hidden="true"><div class="timer-fill" id="timer-fill"></div></div>
+
+          <div class="word-stage">
+            <div>
+              <p class="word-kicker">Respond to the word</p>
+              <h2 class="current-word" id="current-word" aria-live="polite" aria-atomic="true">Example</h2>
+              <span class="paused-notice" id="paused-notice" role="status" hidden>Session paused</span>
+            </div>
+          </div>
+
+          <div class="response-area" id="typing-panel">
+            <label class="response-label" for="response-input">Your sentence</label>
+            <input class="response-input" id="response-input" type="text" inputmode="text" autocomplete="off" autocapitalize="sentences" spellcheck="true" maxlength="280" placeholder="Type your first response…">
+            <p class="input-help">Your response is held in memory for this session.</p>
+          </div>
+
+          <div class="paper-panel" id="paper-panel" hidden>
+            <span class="notebook-icon" aria-hidden="true">≡</span>
+            <div><strong>Write in your notebook</strong><span>The next word will appear when the timer ends.</span></div>
+          </div>
+
+          <div class="training-controls" id="training-controls">
+            <button class="button button-secondary" id="pause-button" type="button" aria-label="Pause timer">Pause</button>
+            <button class="button button-secondary" id="retry-button" type="button" aria-label="Retry current word">Retry</button>
+            <button class="button" id="next-button" type="button">Next word</button>
+          </div>
+          <p class="simulation-note" id="simulation-note" hidden>Simulation mode advances automatically when the timer reaches zero.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="summary-screen" id="summary-screen" aria-labelledby="summary-title" hidden>
+      <div class="container">
+        <div class="summary-header">
+          <p class="eyebrow">Session complete</p>
+          <h1 id="summary-title">Your WAT session summary</h1>
+          <p>Your responses are shown below for review. This prototype keeps session data in memory only.</p>
+        </div>
+
+        <div class="summary-stats" aria-label="Session statistics">
+          <div class="stat-card"><strong id="summary-session-mode">Training</strong><span>Session type</span></div>
+          <div class="stat-card"><strong id="summary-response-mode">Typing</strong><span>Response mode</span></div>
+          <div class="stat-card"><strong id="summary-presented">0 / 20</strong><span>Words presented</span></div>
+          <div class="stat-card"><strong id="summary-saved">0</strong><span id="summary-saved-label">Typed answers saved</span></div>
+          <div class="stat-card"><strong id="summary-unanswered">0</strong><span>Unanswered typed words</span></div>
+          <div class="stat-card"><strong id="summary-total">20</strong><span>Total words in session</span></div>
+        </div>
+
+        <h2 class="answer-heading">Presented words</h2>
+        <ol class="answer-list" id="answer-list"></ol>
+
+        <div class="summary-actions">
+          <button class="button" id="restart-button" type="button">Restart session</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="end-dialog" aria-labelledby="dialog-title" aria-describedby="dialog-copy">
+    <div class="dialog-body">
+      <h2 id="dialog-title">End this session?</h2>
+      <p id="dialog-copy">Are you sure? Your completed answers will be saved.</p>
+      <div class="dialog-actions">
+        <button class="button button-secondary" id="cancel-end-button" type="button">Continue</button>
+        <button class="button button-danger" id="confirm-end-button" type="button">End session</button>
+      </div>
+    </div>
+  </dialog>
+
+  <noscript><p class="container noscript">JavaScript is required to run the timed WAT practice session.</p></noscript>
+
+  <script>
+    'use strict';
+
+    // Configuration: changing secondsPerWord to 10 requires no other code changes.
+    const CONFIG = {
+      secondsPerWord: 15,
+      totalWords: 20
+    };
+
+    // Temporary browser storage keys. These can later be replaced by an API layer.
+    const LATEST_SESSION_KEY = 'issb_wat_latest_session';
+    const SESSION_HISTORY_KEY = 'issb_wat_session_history';
+
+    const WORDS = [
+      'Courage', 'Failure', 'Team', 'Risk', 'Duty',
+      'Alone', 'Decision', 'Pressure', 'Honest', 'Future',
+      'Lead', 'Problem', 'Change', 'Respect', 'Difficult',
+      'Service', 'Mistake', 'Command', 'Hope', 'Success'
+    ];
+
+    const STATES = Object.freeze({
+      READY: 'ready',
+      RUNNING: 'running',
+      PAUSED: 'paused',
+      ENDED: 'ended'
+    });
+
+    // Application state.
+    let appState = STATES.READY;
+    let session = createEmptySession();
+    let timerHandle = null;
+    let deadline = 0;
+    let remainingMs = CONFIG.secondsPerWord * 1000;
+    let isAdvancing = false;
+    let lastAdvanceAt = -Infinity;
+    let exitContext = { wasRunning: false };
+    let unloadProtectionActive = false;
+
+    // DOM references.
+    const dom = {
+      body: document.body,
+      startScreen: document.getElementById('start-screen'),
+      practiceScreen: document.getElementById('practice-screen'),
+      summaryScreen: document.getElementById('summary-screen'),
+      startButton: document.getElementById('start-button'),
+      restartButton: document.getElementById('restart-button'),
+      endButton: document.getElementById('end-button'),
+      endDialog: document.getElementById('end-dialog'),
+      cancelEndButton: document.getElementById('cancel-end-button'),
+      confirmEndButton: document.getElementById('confirm-end-button'),
+      modeInputs: Array.from(document.querySelectorAll('input[name="session-mode"]')),
+      responseInputs: Array.from(document.querySelectorAll('input[name="response-mode"]')),
+      modeExplanation: document.getElementById('mode-explanation'),
+      durationWords: document.getElementById('duration-words'),
+      durationSeconds: document.getElementById('duration-seconds'),
+      durationTotal: document.getElementById('duration-total'),
+      sessionModeTag: document.getElementById('session-mode-tag'),
+      responseModeTag: document.getElementById('response-mode-tag'),
+      wordProgress: document.getElementById('word-progress'),
+      currentWord: document.getElementById('current-word'),
+      timerBlock: document.querySelector('[role="timer"]'),
+      timerNumber: document.getElementById('timer-number'),
+      timerFill: document.getElementById('timer-fill'),
+      pausedNotice: document.getElementById('paused-notice'),
+      typingPanel: document.getElementById('typing-panel'),
+      paperPanel: document.getElementById('paper-panel'),
+      responseInput: document.getElementById('response-input'),
+      trainingControls: document.getElementById('training-controls'),
+      simulationNote: document.getElementById('simulation-note'),
+      pauseButton: document.getElementById('pause-button'),
+      retryButton: document.getElementById('retry-button'),
+      nextButton: document.getElementById('next-button'),
+      summarySessionMode: document.getElementById('summary-session-mode'),
+      summaryResponseMode: document.getElementById('summary-response-mode'),
+      summaryPresented: document.getElementById('summary-presented'),
+      summarySaved: document.getElementById('summary-saved'),
+      summarySavedLabel: document.getElementById('summary-saved-label'),
+      summaryUnanswered: document.getElementById('summary-unanswered'),
+      summaryTotal: document.getElementById('summary-total'),
+      answerList: document.getElementById('answer-list')
+    };
+
+    // Session initialization.
+    function createEmptySession() {
+      return {
+        mode: 'training',
+        responseMode: 'typing',
+        currentIndex: 0,
+        startedAt: null,
+        endedAt: null,
+        answers: []
+      };
+    }
+
+    function buildAnswerRecords(responseMode) {
+      return WORDS.slice(0, CONFIG.totalWords).map(function (word) {
+        const record = {
+          word: word,
+          presented: false,
+          saved: false,
+          completed: false,
+          timeUsedSeconds: 0
+        };
+        if (responseMode === 'typing') record.answer = '';
+        return record;
+      });
+    }
+
+    function getSelectedValue(name) {
+      const selected = document.querySelector('input[name="' + name + '"]:checked');
+      return selected ? selected.value : '';
+    }
+
+    // Session start and restart.
+    function startSession() {
+      if (appState !== STATES.READY) return;
+
+      const selectedMode = getSelectedValue('session-mode');
+      const selectedResponseMode = getSelectedValue('response-mode');
+
+      session = createEmptySession();
+      session.mode = selectedMode;
+      session.responseMode = selectedResponseMode;
+      session.startedAt = new Date().toISOString();
+      session.answers = buildAnswerRecords(selectedResponseMode);
+
+      appState = STATES.RUNNING;
+      lockModeChoices(true);
+      registerUnloadProtection();
+      showOnly(dom.practiceScreen);
+      renderCurrentWord();
+      startTimer(CONFIG.secondsPerWord * 1000);
+      syncUIState();
+    }
+
+    function restartSession() {
+      stopTimer();
+      removeUnloadProtection();
+      closeEndDialog();
+      appState = STATES.READY;
+      session = createEmptySession();
+      remainingMs = CONFIG.secondsPerWord * 1000;
+      isAdvancing = false;
+      lastAdvanceAt = -Infinity;
+      exitContext = { wasRunning: false };
+
+      document.getElementById('mode-training').checked = true;
+      document.getElementById('response-typing').checked = true;
+      lockModeChoices(false);
+      dom.responseInput.value = '';
+      dom.answerList.replaceChildren();
+      updateTimerDisplay(CONFIG.secondsPerWord * 1000);
+      updateModeExplanation();
+      showOnly(dom.startScreen);
+      syncUIState();
+      dom.startButton.focus();
+    }
+
+    function showOnly(screen) {
+      [dom.startScreen, dom.practiceScreen, dom.summaryScreen].forEach(function (item) {
+        item.hidden = item !== screen;
+      });
+      dom.body.classList.toggle('session-active', screen === dom.practiceScreen);
+      window.scrollTo(0, 0);
+    }
+
+    function lockModeChoices(locked) {
+      dom.modeInputs.concat(dom.responseInputs).forEach(function (input) {
+        input.disabled = locked;
+      });
+    }
+
+    // Deadline-based timer controls.
+    function startTimer(durationMs) {
+      stopTimer();
+      remainingMs = Math.max(0, durationMs);
+      deadline = performance.now() + remainingMs;
+      updateTimerDisplay(remainingMs);
+      scheduleTimerTick();
+    }
+
+    function scheduleTimerTick() {
+      stopTimer();
+      if (appState !== STATES.RUNNING) return;
+
+      const tick = function () {
+        if (appState !== STATES.RUNNING) return;
+        remainingMs = Math.max(0, deadline - performance.now());
+        updateTimerDisplay(remainingMs);
+
+        if (remainingMs <= 0) {
+          timerHandle = null;
+          advanceWord('expired');
+          return;
+        }
+
+        timerHandle = window.setTimeout(tick, Math.min(100, remainingMs));
+      };
+
+      timerHandle = window.setTimeout(tick, Math.min(100, remainingMs));
+    }
+
+    function pauseTimer(updateUI) {
+      if (appState !== STATES.RUNNING) return false;
+      remainingMs = Math.max(0, deadline - performance.now());
+      stopTimer();
+
+      if (remainingMs <= 0) {
+        advanceWord('expired');
+        return false;
+      }
+
+      appState = STATES.PAUSED;
+      if (updateUI !== false) syncUIState();
+      return true;
+    }
+
+    function resumeTimer() {
+      if (appState !== STATES.PAUSED) return;
+      appState = STATES.RUNNING;
+      deadline = performance.now() + remainingMs;
+      scheduleTimerTick();
+      syncUIState();
+      if (session.responseMode === 'typing') dom.responseInput.focus({ preventScroll: true });
+    }
+
+    function retryCurrentWord() {
+      if (appState !== STATES.RUNNING || session.mode !== 'training') return;
+      const record = session.answers[session.currentIndex];
+      if (record) record.timeUsedSeconds = 0;
+      startTimer(CONFIG.secondsPerWord * 1000);
+      if (session.responseMode === 'typing') dom.responseInput.focus({ preventScroll: true });
+    }
+
+    function stopTimer() {
+      if (timerHandle !== null) {
+        window.clearTimeout(timerHandle);
+        timerHandle = null;
+      }
+    }
+
+    function updateTimerDisplay(milliseconds) {
+      const safeMs = Math.max(0, milliseconds);
+      const seconds = Math.ceil(safeMs / 1000);
+      const percentage = CONFIG.secondsPerWord > 0
+        ? Math.max(0, Math.min(100, (safeMs / (CONFIG.secondsPerWord * 1000)) * 100))
+        : 0;
+
+      dom.timerNumber.textContent = String(seconds);
+      dom.timerFill.style.width = percentage + '%';
+      dom.timerBlock.setAttribute('aria-label', seconds + (seconds === 1 ? ' second remaining' : ' seconds remaining'));
+    }
+
+    // Current word and response-mode rendering.
+    function renderCurrentWord() {
+      const record = session.answers[session.currentIndex];
+      if (!record) return;
+
+      record.presented = true;
+      dom.wordProgress.textContent = 'Word ' + (session.currentIndex + 1) + ' of ' + CONFIG.totalWords;
+      dom.currentWord.textContent = record.word;
+      dom.sessionModeTag.textContent = capitalize(session.mode);
+      dom.responseModeTag.textContent = capitalize(session.responseMode);
+
+      const isTyping = session.responseMode === 'typing';
+      dom.typingPanel.hidden = !isTyping;
+      dom.paperPanel.hidden = isTyping;
+
+      if (isTyping) {
+        dom.responseInput.value = record.answer || '';
+        requestAnimationFrame(function () {
+          if (appState === STATES.RUNNING) dom.responseInput.focus({ preventScroll: true });
+        });
+      } else {
+        dom.responseInput.value = '';
+      }
+
+      syncUIState();
+    }
+
+    function updateModeExplanation() {
+      const mode = getSelectedValue('session-mode');
+      const responseMode = getSelectedValue('response-mode');
+      const sessionText = mode === 'training'
+        ? 'Training mode gives you pause, retry and next controls.'
+        : 'Simulation mode runs continuously with no pause, retry or manual next controls.';
+      const responseText = responseMode === 'typing'
+        ? ' Type each response directly into Qiyadat.'
+        : ' Write each response in your own notebook.';
+      dom.modeExplanation.textContent = sessionText + responseText;
+    }
+
+    // Autosave and structured response storage.
+    function autosaveCurrentInput() {
+      if (session.responseMode !== 'typing' || appState === STATES.READY || appState === STATES.ENDED) return;
+      const record = session.answers[session.currentIndex];
+      if (record) record.answer = dom.responseInput.value;
+    }
+
+    function saveCurrentResponse(reason) {
+      const record = session.answers[session.currentIndex];
+      if (!record || !record.presented) return;
+
+      if (session.responseMode === 'typing') {
+        record.answer = dom.responseInput.value;
+      }
+
+      record.saved = true;
+      record.completed = reason !== 'session-ended';
+      record.timeUsedSeconds = roundSeconds((CONFIG.secondsPerWord * 1000 - remainingMs) / 1000);
+
+      console.log('Qiyadat WAT word saved', {
+        index: session.currentIndex,
+        word: record.word,
+        answer: session.responseMode === 'typing' ? record.answer : null,
+        responseMode: session.responseMode,
+        reason: reason,
+        timeUsedSeconds: record.timeUsedSeconds
+      });
+    }
+
+    // Word advancement with guards against expiry/click races and repeated taps.
+    function advanceWord(reason) {
+      const now = performance.now();
+      if (appState !== STATES.RUNNING || isAdvancing || now - lastAdvanceAt < 350) return;
+
+      isAdvancing = true;
+      stopTimer();
+      remainingMs = Math.max(0, deadline - now);
+      if (reason === 'expired') remainingMs = 0;
+      saveCurrentResponse(reason);
+
+      if (session.currentIndex >= CONFIG.totalWords - 1) {
+        lastAdvanceAt = now;
+        isAdvancing = false;
+        completeSession('natural');
+        return;
+      }
+
+      session.currentIndex += 1;
+      remainingMs = CONFIG.secondsPerWord * 1000;
+      renderCurrentWord();
+      updateTimerDisplay(remainingMs);
+      deadline = performance.now() + remainingMs;
+      lastAdvanceAt = now;
+      isAdvancing = false;
+      scheduleTimerTick();
+    }
+
+    // End-session confirmation preserves paused time on cancellation.
+    function requestEndSession() {
+      if (appState !== STATES.RUNNING && appState !== STATES.PAUSED) return;
+      exitContext.wasRunning = appState === STATES.RUNNING;
+      if (exitContext.wasRunning) pauseTimer(false);
+      syncUIState();
+
+      if (typeof dom.endDialog.showModal === 'function') {
+        dom.endDialog.showModal();
+        dom.cancelEndButton.focus();
+      } else {
+        const confirmed = window.confirm('Are you sure? Your completed answers will be saved.');
+        confirmed ? confirmEndSession() : cancelEndSession();
+      }
+    }
+
+    function cancelEndSession() {
+      closeEndDialog();
+      if (exitContext.wasRunning && appState === STATES.PAUSED) resumeTimer();
+      exitContext.wasRunning = false;
+    }
+
+    function confirmEndSession() {
+      closeEndDialog();
+      stopTimer();
+      saveCurrentResponse('session-ended');
+      completeSession('manual');
+    }
+
+    function closeEndDialog() {
+      if (dom.endDialog.open) dom.endDialog.close();
+    }
+
+    // Completed-session data and temporary local storage.
+    function createSessionId() {
+      return window.crypto && typeof window.crypto.randomUUID === 'function'
+        ? window.crypto.randomUUID()
+        : 'wat-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+    }
+
+    function buildCompletedSession(reason) {
+      const responses = session.answers.map(function (record, index) {
+        return {
+          index: index,
+          word: record.word,
+          answer: session.responseMode === 'typing' ? String(record.answer || '') : null,
+          responseMode: session.responseMode,
+          presented: Boolean(record.presented),
+          completed: Boolean(record.completed),
+          timeUsed: roundSeconds(record.timeUsedSeconds)
+        };
+      });
+
+      const completedResponses = responses.filter(function (record) { return record.completed; });
+      const answeredResponses = completedResponses.filter(function (record) {
+        return record.responseMode === 'typing' && record.answer.trim().length > 0;
+      });
+      const paperResponses = completedResponses.filter(function (record) {
+        return record.responseMode === 'paper';
+      });
+      const unansweredResponses = completedResponses.filter(function (record) {
+        return record.responseMode === 'typing' && record.answer.trim().length === 0;
+      });
+      const validTimes = completedResponses
+        .map(function (record) { return Number(record.timeUsed); })
+        .filter(function (value) { return Number.isFinite(value) && value >= 0; });
+      const recordedResponseTimes = completedResponses
+        .filter(function (record) {
+          return record.responseMode === 'paper' || (record.answer && record.answer.trim().length > 0);
+        })
+        .map(function (record) { return Number(record.timeUsed); })
+        .filter(function (value) { return Number.isFinite(value) && value >= 0; });
+      const startedAtMs = Date.parse(session.startedAt);
+      const completedAtMs = Date.parse(session.endedAt);
+      const durationSeconds = Number.isFinite(startedAtMs) && Number.isFinite(completedAtMs)
+        ? Math.max(0, Math.round((completedAtMs - startedAtMs) / 1000))
+        : 0;
+      const completedWords = completedResponses.length;
+
+      return {
+        id: createSessionId(),
+        testType: 'WAT',
+        startedAt: session.startedAt,
+        completedAt: session.endedAt,
+        practiceMode: session.mode,
+        responseMode: session.responseMode,
+        secondsPerWord: CONFIG.secondsPerWord,
+        totalWords: CONFIG.totalWords,
+        completedWords: completedWords,
+        answeredWords: answeredResponses.length,
+        paperResponses: paperResponses.length,
+        unansweredWords: unansweredResponses.length,
+        completionPercentage: CONFIG.totalWords > 0
+          ? Math.round((completedWords / CONFIG.totalWords) * 100)
+          : 0,
+        totalDurationSeconds: durationSeconds,
+        averageResponseTime: validTimes.length
+          ? roundSeconds(validTimes.reduce(function (sum, value) { return sum + value; }, 0) / validTimes.length)
+          : null,
+        fastestResponseTime: recordedResponseTimes.length ? Math.min.apply(null, recordedResponseTimes) : null,
+        slowestResponseTime: recordedResponseTimes.length ? Math.max.apply(null, recordedResponseTimes) : null,
+        endedEarly: reason !== 'natural' || completedWords < CONFIG.totalWords,
+        responses: responses
+      };
+    }
+
+    function saveCompletedSession(completedSession) {
+      try {
+        localStorage.setItem(LATEST_SESSION_KEY, JSON.stringify(completedSession));
+      } catch (error) {
+        console.error('Could not save the latest WAT session:', error);
+        return false;
+      }
+
+      let history = [];
+      try {
+        const savedHistory = JSON.parse(localStorage.getItem(SESSION_HISTORY_KEY));
+        if (Array.isArray(savedHistory)) history = savedHistory;
+      } catch (error) {
+        console.error('Could not read WAT session history:', error);
+      }
+
+      history.push(completedSession);
+
+      try {
+        localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(history));
+      } catch (error) {
+        console.error('Could not update WAT session history:', error);
+      }
+
+      return true;
+    }
+
+    // Natural and manual completion save the same result and open the result page.
+    function completeSession(reason) {
+      if (appState === STATES.ENDED) return;
+      stopTimer();
+      appState = STATES.ENDED;
+      session.endedAt = new Date().toISOString();
+      removeUnloadProtection();
+
+      const completedSession = buildCompletedSession(reason);
+      const saved = saveCompletedSession(completedSession);
+
+      console.log('Qiyadat WAT session ended', {
+        reason: reason,
+        saved: saved,
+        session: completedSession
+      });
+
+      if (saved) {
+        window.location.href = 'wat-results.html';
+      } else {
+        renderSummary();
+        showOnly(dom.summaryScreen);
+        syncUIState();
+      }
+    }
+
+    function renderSummary() {
+      const presented = session.answers.filter(function (record) { return record.presented; });
+      const answered = session.responseMode === 'typing'
+        ? presented.filter(function (record) { return record.answer && record.answer.trim(); }).length
+        : 0;
+      const unanswered = session.responseMode === 'typing' ? presented.length - answered : 0;
+
+      dom.summarySessionMode.textContent = capitalize(session.mode);
+      dom.summaryResponseMode.textContent = capitalize(session.responseMode);
+      dom.summaryPresented.textContent = presented.length + ' / ' + CONFIG.totalWords;
+      dom.summarySaved.textContent = String(answered);
+      dom.summarySavedLabel.textContent = session.responseMode === 'typing' ? 'Typed answers saved' : 'Paper entries presented';
+      if (session.responseMode === 'paper') dom.summarySaved.textContent = String(presented.length);
+      dom.summaryUnanswered.textContent = String(unanswered);
+      dom.summaryTotal.textContent = String(CONFIG.totalWords);
+      dom.answerList.replaceChildren();
+
+      presented.forEach(function (record) {
+        const item = document.createElement('li');
+        const word = document.createElement('span');
+        const answer = document.createElement('p');
+        item.className = 'answer-item';
+        word.className = 'answer-word';
+        answer.className = 'answer-text';
+        word.textContent = record.word;
+
+        if (session.responseMode === 'paper') {
+          answer.textContent = 'Paper response not captured';
+          answer.classList.add('answer-empty');
+        } else if (record.answer && record.answer.trim()) {
+          answer.textContent = record.answer;
+        } else {
+          answer.textContent = 'No answer entered';
+          answer.classList.add('answer-empty');
+        }
+
+        item.append(word, answer);
+        dom.answerList.appendChild(item);
+      });
+    }
+
+    // UI-state synchronization prevents conflicting controls.
+    function syncUIState() {
+      const running = appState === STATES.RUNNING;
+      const paused = appState === STATES.PAUSED;
+      const active = running || paused;
+      const training = session.mode === 'training';
+      const typing = session.responseMode === 'typing';
+
+      dom.trainingControls.hidden = active ? !training : false;
+      dom.simulationNote.hidden = active ? training : true;
+      dom.pauseButton.textContent = paused ? 'Resume' : 'Pause';
+      dom.pauseButton.setAttribute('aria-label', paused ? 'Resume timer' : 'Pause timer');
+      dom.retryButton.disabled = !running;
+      dom.nextButton.disabled = !running;
+      dom.responseInput.disabled = !running || !typing;
+      dom.pausedNotice.hidden = !paused;
+      dom.endButton.disabled = !active;
+    }
+
+    // Session loss protection is active only during an unfinished session.
+    function beforeUnloadHandler(event) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+
+    function registerUnloadProtection() {
+      if (unloadProtectionActive) return;
+      window.addEventListener('beforeunload', beforeUnloadHandler);
+      unloadProtectionActive = true;
+    }
+
+    function removeUnloadProtection() {
+      if (!unloadProtectionActive) return;
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
+      unloadProtectionActive = false;
+    }
+
+    function capitalize(value) {
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    function roundSeconds(value) {
+      return Math.max(0, Math.round(value * 10) / 10);
+    }
+
+    function formatDuration(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return minutes + ':' + String(seconds).padStart(2, '0');
+    }
+
+    // Event listeners.
+    dom.modeInputs.concat(dom.responseInputs).forEach(function (input) {
+      input.addEventListener('change', updateModeExplanation);
+    });
+
+    dom.startButton.addEventListener('click', startSession);
+    dom.restartButton.addEventListener('click', restartSession);
+    dom.responseInput.addEventListener('input', autosaveCurrentInput);
+    dom.endButton.addEventListener('click', requestEndSession);
+    dom.cancelEndButton.addEventListener('click', cancelEndSession);
+    dom.confirmEndButton.addEventListener('click', confirmEndSession);
+
+    dom.endDialog.addEventListener('cancel', function (event) {
+      event.preventDefault();
+      cancelEndSession();
+    });
+
+    dom.pauseButton.addEventListener('click', function () {
+      if (appState === STATES.RUNNING) pauseTimer(true);
+      else if (appState === STATES.PAUSED) resumeTimer();
+    });
+
+    dom.retryButton.addEventListener('click', retryCurrentWord);
+    dom.nextButton.addEventListener('click', function () { advanceWord('manual-next'); });
+
+    // Initial UI derived from configuration.
+    if (WORDS.length !== CONFIG.totalWords) {
+      throw new Error('WORDS must contain exactly CONFIG.totalWords unique entries.');
+    }
+    if (new Set(WORDS).size !== WORDS.length) {
+      throw new Error('All WAT placeholder words must be unique.');
+    }
+
+    dom.durationWords.textContent = String(CONFIG.totalWords);
+    dom.durationSeconds.textContent = CONFIG.secondsPerWord + 's';
+    dom.durationTotal.textContent = formatDuration(CONFIG.secondsPerWord * CONFIG.totalWords);
+    updateTimerDisplay(CONFIG.secondsPerWord * 1000);
+    updateModeExplanation();
+    syncUIState();
+  </script>
+</body>
+</html>

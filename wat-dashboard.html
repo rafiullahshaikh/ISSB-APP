@@ -1,0 +1,1686 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#172017">
+  <meta name="description" content="Review WAT practice consistency, response timing, and completed sessions with Qiyadat.">
+  <title>WAT Progress — Qiyadat</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23172017'/%3E%3Cpath d='M17 17h30v22L32 50 17 39V17Z' fill='none' stroke='%23c9a85c' stroke-width='4'/%3E%3Cpath d='M23 38V28l7 4 11-10v16' fill='none' stroke='%23f3efdf' stroke-width='4'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --olive-950: #172017;
+      --olive-900: #1e2a1f;
+      --olive-800: #293829;
+      --olive-700: #3b4b38;
+      --khaki: #c8bd98;
+      --sand: #ded4b9;
+      --paper: #f3efdf;
+      --white: #fffdf6;
+      --ink: #172017;
+      --charcoal: #31362f;
+      --muted: #65695f;
+      --brass: #b58b3a;
+      --brass-light: #d5b56d;
+      --line: rgba(23, 32, 23, 0.18);
+      --danger: #7a332d;
+      --success: #506d4d;
+      --focus: #e1be6a;
+      --shadow: 0 18px 50px rgba(23, 32, 23, 0.12);
+      --content: 1120px;
+      --radius: 3px;
+    }
+
+    * { box-sizing: border-box; }
+    html { width: 100%; scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; }
+    button, select { font: inherit; }
+    button, a, select { -webkit-tap-highlight-color: transparent; }
+    [hidden] { display: none !important; }
+
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      z-index: 100;
+      padding: 10px 14px;
+      color: var(--ink);
+      background: var(--white);
+      transform: translateY(-160%);
+    }
+
+    .skip-link:focus { transform: translateY(0); }
+
+    .site-header {
+      color: var(--white);
+      background: var(--olive-950);
+      border-bottom: 1px solid rgba(213, 181, 109, 0.35);
+    }
+
+    .header-inner {
+      width: min(100% - 28px, var(--content));
+      min-height: 68px;
+      margin-inline: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--white);
+      text-decoration: none;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.18rem;
+      font-weight: 700;
+    }
+
+    .brand-mark {
+      width: 27px;
+      height: 31px;
+      display: grid;
+      place-items: center;
+      color: var(--brass-light);
+      border: 1px solid currentColor;
+      clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+
+    .page-label {
+      display: none;
+      color: rgba(255, 253, 246, 0.62);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .header-link,
+    .button {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 253, 246, 0.34);
+      color: var(--white);
+      background: transparent;
+      text-decoration: none;
+      font-size: 0.84rem;
+      font-weight: 800;
+      line-height: 1.15;
+      cursor: pointer;
+    }
+
+    .header-actions .button {
+      color: var(--olive-950);
+      background: var(--brass-light);
+      border-color: var(--brass-light);
+    }
+
+    .dashboard {
+      width: min(100% - 24px, var(--content));
+      margin-inline: auto;
+      padding: 24px 0 52px;
+    }
+
+    .welcome {
+      position: relative;
+      overflow: hidden;
+      padding: 26px 20px;
+      color: var(--white);
+      background:
+        linear-gradient(rgba(213, 181, 109, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(213, 181, 109, 0.07) 1px, transparent 1px),
+        var(--olive-900);
+      background-size: 32px 32px;
+      border: 1px solid rgba(213, 181, 109, 0.32);
+      box-shadow: var(--shadow);
+    }
+
+    .welcome::after {
+      content: "";
+      position: absolute;
+      width: 210px;
+      height: 210px;
+      right: -105px;
+      bottom: -130px;
+      border: 1px solid rgba(213, 181, 109, 0.2);
+      border-radius: 50%;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--brass-light);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1, h2, h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.12;
+    }
+
+    h1 {
+      max-width: 660px;
+      margin-bottom: 10px;
+      font-size: clamp(2rem, 9vw, 4rem);
+      letter-spacing: -0.035em;
+    }
+
+    .welcome-copy {
+      max-width: 620px;
+      margin-bottom: 18px;
+      color: rgba(255, 253, 246, 0.78);
+      font-size: 0.98rem;
+    }
+
+    .streak-pill {
+      width: fit-content;
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      color: var(--white);
+      background: rgba(255, 253, 246, 0.08);
+      border: 1px solid rgba(213, 181, 109, 0.45);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .streak-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--brass-light);
+      border-radius: 50%;
+    }
+
+    .range-panel {
+      margin: 18px 0;
+      padding: 14px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      display: grid;
+      gap: 10px;
+    }
+
+    .control-label {
+      color: var(--charcoal);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    select {
+      width: 100%;
+      min-height: 46px;
+      padding: 9px 38px 9px 12px;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid rgba(23, 32, 23, 0.32);
+      border-radius: 0;
+    }
+
+    .section {
+      margin-top: 34px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-heading h2 {
+      margin-bottom: 0;
+      font-size: clamp(1.5rem, 7vw, 2.25rem);
+    }
+
+    .section-note {
+      max-width: 520px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .stat-card {
+      min-width: 0;
+      padding: 17px 14px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--brass);
+    }
+
+    .stat-value {
+      display: block;
+      margin-bottom: 3px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.7rem, 9vw, 2.45rem);
+      font-weight: 700;
+      line-height: 1;
+      overflow-wrap: anywhere;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      line-height: 1.3;
+      text-transform: uppercase;
+    }
+
+    .panel {
+      min-width: 0;
+      padding: 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 30px rgba(23, 32, 23, 0.06);
+    }
+
+    .metric-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .metric-button,
+    .secondary-button,
+    .danger-button {
+      min-height: 44px;
+      padding: 9px 12px;
+      color: var(--ink);
+      background: transparent;
+      border: 1px solid rgba(23, 32, 23, 0.3);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .metric-button[aria-pressed="true"] {
+      color: var(--white);
+      background: var(--olive-800);
+      border-color: var(--olive-800);
+    }
+
+    .chart-help {
+      min-height: 24px;
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .chart-scroll {
+      max-width: 100%;
+      overflow-x: auto;
+      padding: 4px 2px 8px;
+      scrollbar-color: var(--khaki) transparent;
+    }
+
+    .chart {
+      min-width: 560px;
+      min-height: 238px;
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+      padding: 16px 8px 0;
+      background:
+        linear-gradient(to bottom, transparent 24%, rgba(23, 32, 23, 0.08) 25%, transparent 26%, transparent 49%, rgba(23, 32, 23, 0.08) 50%, transparent 51%, transparent 74%, rgba(23, 32, 23, 0.08) 75%, transparent 76%);
+      border-bottom: 1px solid rgba(23, 32, 23, 0.35);
+    }
+
+    .chart-item {
+      flex: 1 0 46px;
+      min-width: 46px;
+      display: grid;
+      grid-template-rows: 24px 150px 42px;
+      align-items: end;
+      text-align: center;
+    }
+
+    .chart-value {
+      align-self: start;
+      color: var(--charcoal);
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .bar-track {
+      height: 150px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .chart-bar {
+      width: min(34px, 72%);
+      min-height: 4px;
+      background: var(--olive-700);
+      border-top: 4px solid var(--brass-light);
+    }
+
+    .chart-date {
+      align-self: center;
+      color: var(--muted);
+      font-size: 0.68rem;
+      line-height: 1.2;
+    }
+
+    .split-grid,
+    .mode-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .split-grid > * { min-width: 0; }
+
+    .comparison-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .comparison-list li {
+      padding: 11px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .comparison-list li:last-child { border-bottom: 0; }
+
+    .comparison-label {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .comparison-value { font-weight: 700; }
+
+    .mode-card {
+      padding: 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--brass);
+    }
+
+    .mode-card h3 {
+      margin-bottom: 14px;
+      font-size: 1.25rem;
+    }
+
+    .mode-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 0;
+    }
+
+    .mode-stats div { min-width: 0; }
+    .mode-stats dt {
+      color: var(--muted);
+      font-size: 0.69rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .mode-stats dd {
+      margin: 2px 0 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .mode-empty {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .week-row {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(76px, 1fr));
+      gap: 7px;
+      min-width: 570px;
+    }
+
+    .week-scroll {
+      max-width: 100%;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .day-card {
+      min-height: 94px;
+      padding: 12px 9px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .day-card.has-practice {
+      color: var(--white);
+      background: var(--olive-800);
+      border-color: var(--olive-800);
+      box-shadow: inset 0 3px 0 var(--brass-light);
+    }
+
+    .day-name {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .day-count {
+      display: block;
+      font-size: 0.74rem;
+      line-height: 1.25;
+    }
+
+    .history-toolbar {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 14px;
+      background: var(--sand);
+      border: 1px solid var(--line);
+    }
+
+    .filter-field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .history-count {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .session-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .session-card {
+      padding: 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--olive-700);
+    }
+
+    .session-card.ended-early { border-top-color: var(--brass); }
+
+    .session-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .session-date {
+      margin: 0;
+      color: var(--charcoal);
+      font-weight: 800;
+    }
+
+    .session-time {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 400;
+    }
+
+    .status-badge {
+      flex: 0 0 auto;
+      padding: 5px 8px;
+      color: var(--olive-900);
+      background: var(--sand);
+      border: 1px solid rgba(23, 32, 23, 0.18);
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .session-mode {
+      margin-bottom: 10px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.18rem;
+      font-weight: 700;
+    }
+
+    .session-facts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-bottom: 16px;
+    }
+
+    .fact {
+      padding: 10px;
+      background: var(--paper);
+      border-left: 2px solid var(--khaki);
+    }
+
+    .fact-value {
+      display: block;
+      font-weight: 800;
+    }
+
+    .fact-label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.68rem;
+      line-height: 1.25;
+      text-transform: uppercase;
+    }
+
+    .card-actions {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .secondary-button {
+      text-decoration: none;
+    }
+
+    .danger-button {
+      color: var(--danger);
+      border-color: rgba(122, 51, 45, 0.42);
+      background: transparent;
+    }
+
+    .load-more-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    .load-more-wrap .secondary-button { min-width: 180px; }
+
+    .empty-inline,
+    .empty-dashboard {
+      padding: 24px 18px;
+      color: var(--muted);
+      background: var(--white);
+      border: 1px dashed rgba(23, 32, 23, 0.3);
+      text-align: center;
+    }
+
+    .empty-dashboard {
+      margin-top: 24px;
+      padding: 40px 20px;
+    }
+
+    .empty-dashboard h1 {
+      margin-bottom: 10px;
+      color: var(--ink);
+      font-size: clamp(2rem, 9vw, 3.2rem);
+    }
+
+    .empty-actions {
+      display: grid;
+      gap: 8px;
+      max-width: 420px;
+      margin: 22px auto 0;
+    }
+
+    .button-primary {
+      color: var(--white);
+      background: var(--olive-800);
+      border-color: var(--olive-800);
+    }
+
+    .dashboard-footer {
+      display: grid;
+      gap: 18px;
+      margin-top: 38px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+
+    .practice-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .clear-history {
+      justify-self: start;
+    }
+
+    .site-footer {
+      padding: 20px 14px;
+      color: rgba(255, 253, 246, 0.66);
+      background: var(--olive-950);
+      text-align: center;
+      font-size: 0.78rem;
+    }
+
+    @media (max-width: 359px) {
+      .summary-grid { grid-template-columns: 1fr; }
+      .header-link { display: none; }
+      .dashboard { width: min(100% - 18px, var(--content)); }
+      .welcome { padding-inline: 16px; }
+      .panel, .session-card { padding: 15px; }
+      .session-facts { grid-template-columns: 1fr; }
+    }
+
+    @media (min-width: 520px) {
+      .page-label { display: block; }
+      .range-panel { grid-template-columns: 1fr minmax(190px, 260px); align-items: center; }
+      .history-toolbar { grid-template-columns: 1fr 1fr; }
+      .empty-actions { grid-template-columns: 1fr 1fr; }
+      .dashboard-footer { grid-template-columns: 1fr auto; align-items: center; }
+      .clear-history { justify-self: end; }
+    }
+
+    @media (min-width: 720px) {
+      .dashboard { padding-top: 34px; }
+      .welcome { padding: 38px; }
+      .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .split-grid { grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr); }
+      .mode-grid { grid-template-columns: 1fr 1fr; }
+      .session-list { grid-template-columns: 1fr 1fr; }
+      .session-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    }
+
+    @media (min-width: 980px) {
+      .summary-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      .stat-card { min-height: 128px; }
+      .stat-value { font-size: 2rem; }
+      .history-toolbar { grid-template-columns: repeat(2, minmax(220px, 300px)); }
+    }
+
+    @media (hover: hover) {
+      .header-link:hover { border-color: var(--brass-light); }
+      .header-actions .button:hover { background: var(--white); border-color: var(--white); }
+      .secondary-button:hover, .metric-button:hover { color: var(--white); background: var(--olive-800); border-color: var(--olive-800); }
+      .danger-button:hover { color: var(--white); background: var(--danger); border-color: var(--danger); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to dashboard</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html" aria-label="Qiyadat home">
+        <span class="brand-mark" aria-hidden="true">Q</span>
+        <span>Qiyadat</span>
+      </a>
+      <span class="page-label">WAT Progress</span>
+      <nav class="header-actions" aria-label="Dashboard navigation">
+        <a class="header-link" href="index.html">Home</a>
+        <a class="button" href="wat-practice.html">Start Practice</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="dashboard" id="main-content">
+    <section class="empty-dashboard" id="empty-dashboard" hidden aria-labelledby="empty-title">
+      <p class="eyebrow">Practice activity</p>
+      <h1 id="empty-title">No WAT practice history yet</h1>
+      <p>Complete your first practice session to begin tracking your progress.</p>
+      <div class="empty-actions">
+        <a class="button button-primary" href="wat-practice.html">Start WAT Practice</a>
+        <a class="secondary-button" href="index.html">Return Home</a>
+      </div>
+    </section>
+
+    <div id="dashboard-content" hidden>
+      <section class="welcome" aria-labelledby="dashboard-title">
+        <p class="eyebrow">Practice record</p>
+        <h1 id="dashboard-title">Your WAT Progress</h1>
+        <p class="welcome-copy">Review your practice consistency, response speed, and completed sessions.</p>
+        <div class="streak-pill" id="welcome-streak">
+          <span class="streak-dot" aria-hidden="true"></span>
+          <span id="welcome-streak-text">Current streak: 0 days</span>
+        </div>
+      </section>
+
+      <div class="range-panel">
+        <label class="control-label" for="date-range">Dashboard date range</label>
+        <select id="date-range">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="all">All time</option>
+        </select>
+      </div>
+
+      <section class="section" aria-labelledby="summary-title">
+        <div class="section-heading">
+          <h2 id="summary-title">Practice summary</h2>
+        </div>
+        <div class="summary-grid">
+          <article class="stat-card"><strong class="stat-value" id="stat-sessions">0</strong><span class="stat-label">Sessions completed</span></article>
+          <article class="stat-card"><strong class="stat-value" id="stat-attempted">0</strong><span class="stat-label">Words attempted</span></article>
+          <article class="stat-card"><strong class="stat-value" id="stat-answers">0</strong><span class="stat-label">Answers recorded</span></article>
+          <article class="stat-card"><strong class="stat-value" id="stat-completion">—</strong><span class="stat-label">Average completion</span></article>
+          <article class="stat-card"><strong class="stat-value" id="stat-response">—</strong><span class="stat-label">Average response</span></article>
+          <article class="stat-card"><strong class="stat-value" id="stat-streak">0</strong><span class="stat-label">Current streak</span></article>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="progress-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Latest sessions</p>
+            <h2 id="progress-title">Progress chart</h2>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="metric-tabs" aria-label="Chart metric">
+            <button class="metric-button" type="button" data-metric="completion" aria-pressed="true">Completion rate</button>
+            <button class="metric-button" type="button" data-metric="response" aria-pressed="false">Average response time</button>
+          </div>
+          <p class="chart-help" id="chart-help">Completion is calculated from words completed across each session.</p>
+          <div class="chart-scroll" id="chart-scroll">
+            <div class="chart" id="progress-chart" role="img" aria-label="WAT session progress chart"></div>
+          </div>
+          <p class="empty-inline" id="chart-empty" hidden>No sessions are available in this date range.</p>
+        </div>
+      </section>
+
+      <section class="section split-grid" aria-label="Practice comparisons">
+        <div>
+          <div class="section-heading"><h2 id="improvement-title">Latest comparison</h2></div>
+          <div class="panel" aria-labelledby="improvement-title">
+            <ul class="comparison-list" id="improvement-list"></ul>
+            <p class="mode-empty" id="improvement-empty" hidden>Complete another session to see a comparison.</p>
+          </div>
+        </div>
+        <div>
+          <div class="section-heading"><h2 id="consistency-title">Seven-day activity</h2></div>
+          <div class="panel" aria-labelledby="consistency-title">
+            <div class="week-scroll"><div class="week-row" id="week-row"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="mode-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Practice modes</p>
+            <h2 id="mode-title">Training and simulation</h2>
+          </div>
+        </div>
+        <div class="mode-grid" id="mode-grid"></div>
+      </section>
+
+      <section class="section" aria-labelledby="history-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Saved activity</p>
+            <h2 id="history-title">Recent sessions</h2>
+          </div>
+        </div>
+        <div class="history-toolbar">
+          <div class="filter-field">
+            <label class="control-label" for="mode-filter">Practice mode</label>
+            <select id="mode-filter">
+              <option value="all">All modes</option>
+              <option value="training">Training</option>
+              <option value="simulation">Simulation</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label class="control-label" for="status-filter">Session status</label>
+            <select id="status-filter">
+              <option value="all">All sessions</option>
+              <option value="completed">Completed</option>
+              <option value="early">Ended early</option>
+            </select>
+          </div>
+        </div>
+        <p class="history-count" id="history-count" aria-live="polite"></p>
+        <ol class="session-list" id="session-list"></ol>
+        <p class="empty-inline" id="history-empty" hidden>No sessions match these filters.</p>
+        <div class="load-more-wrap" id="load-more-wrap" hidden>
+          <button class="secondary-button" id="show-more" type="button">Show More</button>
+        </div>
+      </section>
+
+      <footer class="dashboard-footer">
+        <p class="practice-note">This dashboard tracks practice activity only. It is not an official ISSB assessment or psychological evaluation.</p>
+        <button class="danger-button clear-history" id="clear-history" type="button">Clear Practice History</button>
+      </footer>
+    </div>
+  </main>
+
+  <footer class="site-footer">Independent preparation platform. No selection guarantee.</footer>
+
+  <script>
+    'use strict';
+
+    // Storage configuration.
+    const SESSION_HISTORY_KEY = 'issb_wat_session_history';
+    const LATEST_SESSION_KEY = 'issb_wat_latest_session';
+
+    // Dashboard state.
+    const state = {
+      rawHistory: [],
+      sessions: [],
+      range: '30',
+      chartMetric: 'completion',
+      modeFilter: 'all',
+      statusFilter: 'all',
+      visibleSessions: 5
+    };
+
+    // DOM references.
+    const dom = {
+      emptyDashboard: document.getElementById('empty-dashboard'),
+      dashboardContent: document.getElementById('dashboard-content'),
+      dateRange: document.getElementById('date-range'),
+      welcomeStreakText: document.getElementById('welcome-streak-text'),
+      statSessions: document.getElementById('stat-sessions'),
+      statAttempted: document.getElementById('stat-attempted'),
+      statAnswers: document.getElementById('stat-answers'),
+      statCompletion: document.getElementById('stat-completion'),
+      statResponse: document.getElementById('stat-response'),
+      statStreak: document.getElementById('stat-streak'),
+      metricButtons: Array.from(document.querySelectorAll('.metric-button')),
+      chartHelp: document.getElementById('chart-help'),
+      chartScroll: document.getElementById('chart-scroll'),
+      progressChart: document.getElementById('progress-chart'),
+      chartEmpty: document.getElementById('chart-empty'),
+      improvementList: document.getElementById('improvement-list'),
+      improvementEmpty: document.getElementById('improvement-empty'),
+      modeGrid: document.getElementById('mode-grid'),
+      weekRow: document.getElementById('week-row'),
+      modeFilter: document.getElementById('mode-filter'),
+      statusFilter: document.getElementById('status-filter'),
+      historyCount: document.getElementById('history-count'),
+      sessionList: document.getElementById('session-list'),
+      historyEmpty: document.getElementById('history-empty'),
+      loadMoreWrap: document.getElementById('load-more-wrap'),
+      showMore: document.getElementById('show-more'),
+      clearHistory: document.getElementById('clear-history')
+    };
+
+    // Data loading and validation.
+    function loadSessionHistory() {
+      let parsed;
+      try {
+        const stored = localStorage.getItem(SESSION_HISTORY_KEY);
+        if (!stored) return { raw: [], valid: [] };
+        parsed = JSON.parse(stored);
+      } catch (error) {
+        console.error('Could not read WAT practice history:', error);
+        return { raw: [], valid: [] };
+      }
+
+      if (!Array.isArray(parsed)) {
+        console.warn('WAT practice history was ignored because the stored value is not an array.');
+        return { raw: [], valid: [] };
+      }
+
+      const valid = [];
+      parsed.forEach(function (session, sourceIndex) {
+        if (!validateSession(session)) {
+          console.warn('Ignored an invalid WAT session at history position ' + sourceIndex + '.');
+          return;
+        }
+        try {
+          valid.push(normalizeSession(session, sourceIndex));
+        } catch (error) {
+          console.warn('Could not normalize WAT session at history position ' + sourceIndex + '.', error);
+        }
+      });
+
+      return { raw: parsed, valid: valid };
+    }
+
+    function validateSession(value) {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+      if (value.testType && String(value.testType).toUpperCase() !== 'WAT') return false;
+      return Array.isArray(value.responses) ||
+        Number.isFinite(Number(value.totalWords)) ||
+        Number.isFinite(Number(value.completedWords));
+    }
+
+    function normalizeSession(session, sourceIndex) {
+      const fallbackMode = normalizeMode(session.responseMode, 'typing');
+      const rawResponses = Array.isArray(session.responses) ? session.responses : [];
+      const responses = rawResponses.map(function (response, position) {
+        const safe = response && typeof response === 'object' ? response : {};
+        const responseMode = normalizeMode(safe.responseMode, fallbackMode);
+        return {
+          index: getSafeInteger(safe.index, position, 0),
+          word: typeof safe.word === 'string' && safe.word.trim() ? safe.word.trim() : 'Word ' + (position + 1),
+          answer: typeof safe.answer === 'string' ? safe.answer : '',
+          responseMode: responseMode,
+          presented: Boolean(safe.presented || safe.completed),
+          completed: Boolean(safe.completed),
+          timeUsed: getSafeNumber(safe.timeUsed, null, 0)
+        };
+      }).sort(function (a, b) { return a.index - b.index; });
+
+      const reachedResponses = responses.filter(function (response) { return response.presented || response.completed; });
+      const completedResponses = responses.filter(function (response) { return response.completed; });
+      const answerResponses = reachedResponses.filter(function (response) {
+        return (response.responseMode === 'paper' && response.completed) ||
+          (response.responseMode !== 'paper' && response.answer.trim().length > 0);
+      });
+      const timedResponses = reachedResponses
+        .map(function (response) { return response.timeUsed; })
+        .filter(function (value) { return Number.isFinite(value) && value >= 0; });
+      const responseModes = Array.from(new Set(reachedResponses.map(function (response) { return response.responseMode; })));
+      const completedAt = getDate(session.completedAt || session.endedAt);
+      const startedAt = getDate(session.startedAt);
+      const totalWords = getSafeInteger(session.totalWords, responses.length, 0);
+      const completedWords = responses.length
+        ? completedResponses.length
+        : getSafeInteger(session.completedWords, 0, 0);
+      const wordsAttempted = responses.length
+        ? reachedResponses.length
+        : getSafeInteger(session.wordsAttempted, completedWords, 0);
+      const fallbackAnswers = getSafeInteger(session.answeredWords, 0, 0) + getSafeInteger(session.paperResponses, 0, 0);
+      const answersRecorded = responses.length ? answerResponses.length : fallbackAnswers;
+      const averageResponseTime = timedResponses.length
+        ? timedResponses.reduce(function (sum, value) { return sum + value; }, 0) / timedResponses.length
+        : getSafeNumber(session.averageResponseTime, null, 0);
+      const endedEarly = typeof session.endedEarly === 'boolean'
+        ? session.endedEarly
+        : totalWords > 0 && completedWords < totalWords;
+      const id = typeof session.id === 'string' && session.id.trim()
+        ? session.id.trim()
+        : 'legacy-' + sourceIndex + '-' + String(session.completedAt || session.startedAt || 'undated');
+
+      return {
+        id: id,
+        sourceIndex: sourceIndex,
+        raw: session,
+        testType: 'WAT',
+        startedAt: startedAt,
+        completedAt: completedAt,
+        practiceMode: normalizeMode(session.practiceMode || session.mode, 'training'),
+        responseMode: responseModes.length > 1 ? 'mixed' : (responseModes[0] || fallbackMode),
+        secondsPerWord: getSafeNumber(session.secondsPerWord, null, 0),
+        totalWords: totalWords,
+        completedWords: Math.min(completedWords, totalWords || completedWords),
+        wordsAttempted: wordsAttempted,
+        answersRecorded: answersRecorded,
+        completionPercentage: totalWords > 0 ? Math.min(100, (completedWords / totalWords) * 100) : null,
+        totalDurationSeconds: getSafeNumber(session.totalDurationSeconds, null, 0),
+        averageResponseTime: averageResponseTime,
+        fastestResponseTime: getSafeNumber(session.fastestResponseTime, null, 0),
+        slowestResponseTime: getSafeNumber(session.slowestResponseTime, null, 0),
+        endedEarly: endedEarly,
+        responses: responses
+      };
+    }
+
+    function createResultSession(session) {
+      const hasResponseRecords = session.responses.length > 0;
+      const typedAnswers = hasResponseRecords
+        ? session.responses.filter(function (response) {
+            return response.completed && response.responseMode !== 'paper' && response.answer.trim();
+          }).length
+        : session.answersRecorded;
+      const paperAnswers = hasResponseRecords
+        ? session.responses.filter(function (response) {
+            return response.completed && response.responseMode === 'paper';
+          }).length
+        : 0;
+      return {
+        id: session.id,
+        testType: 'WAT',
+        startedAt: session.startedAt ? session.startedAt.toISOString() : null,
+        completedAt: session.completedAt ? session.completedAt.toISOString() : null,
+        practiceMode: session.practiceMode,
+        responseMode: session.responseMode,
+        secondsPerWord: session.secondsPerWord,
+        totalWords: session.totalWords,
+        completedWords: session.completedWords,
+        answeredWords: typedAnswers,
+        paperResponses: paperAnswers,
+        unansweredWords: hasResponseRecords
+          ? session.responses.filter(function (response) {
+              return response.completed && response.responseMode !== 'paper' && !response.answer.trim();
+            }).length
+          : Math.max(0, session.completedWords - session.answersRecorded),
+        completionPercentage: session.completionPercentage,
+        totalDurationSeconds: session.totalDurationSeconds,
+        averageResponseTime: session.averageResponseTime,
+        fastestResponseTime: session.fastestResponseTime,
+        slowestResponseTime: session.slowestResponseTime,
+        endedEarly: session.endedEarly,
+        responses: session.responses
+      };
+    }
+
+    // Date and number formatting.
+    function getSafeNumber(value, fallback, minimum, maximum) {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return fallback;
+      let safe = typeof minimum === 'number' ? Math.max(minimum, numeric) : numeric;
+      if (typeof maximum === 'number') safe = Math.min(maximum, safe);
+      return safe;
+    }
+
+    function getSafeInteger(value, fallback, minimum) {
+      const numeric = getSafeNumber(value, fallback, minimum);
+      return Number.isFinite(numeric) ? Math.round(numeric) : fallback;
+    }
+
+    function normalizeMode(value, fallback) {
+      return typeof value === 'string' && value.trim() ? value.trim().toLowerCase() : fallback;
+    }
+
+    function getDate(value) {
+      if (!value) return null;
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function formatDate(date) {
+      return date
+        ? new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'long', year: 'numeric' }).format(date)
+        : 'Date unavailable';
+    }
+
+    function formatTime(date) {
+      return date
+        ? new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(date)
+        : 'Time unavailable';
+    }
+
+    function formatShortDate(date) {
+      return date
+        ? new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(date)
+        : 'No date';
+    }
+
+    function formatMode(value) {
+      const text = typeof value === 'string' && value ? value : 'unavailable';
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function formatPercent(value) {
+      return Number.isFinite(value) ? Math.round(value) + '%' : '—';
+    }
+
+    function formatSeconds(value) {
+      if (!Number.isFinite(value)) return '—';
+      return (Math.round(value * 10) / 10) + 's';
+    }
+
+    function localDateKey(date) {
+      if (!date) return null;
+      return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+    }
+
+    function startOfLocalDay(date) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    // Date-range filtering.
+    function filterSessionsByDate(sessions, range) {
+      if (range === 'all') return sessions.slice();
+      const days = Number(range);
+      const today = startOfLocalDay(new Date());
+      const lowerBound = new Date(today);
+      lowerBound.setDate(lowerBound.getDate() - (days - 1));
+      const upperBound = new Date(today);
+      upperBound.setDate(upperBound.getDate() + 1);
+      return sessions.filter(function (session) {
+        return session.completedAt && session.completedAt >= lowerBound && session.completedAt < upperBound;
+      });
+    }
+
+    function sortChronologically(sessions) {
+      return sessions.slice().sort(function (a, b) {
+        const aTime = a.completedAt ? a.completedAt.getTime() : -Infinity;
+        const bTime = b.completedAt ? b.completedAt.getTime() : -Infinity;
+        return aTime - bTime;
+      });
+    }
+
+    function sortMostRecent(sessions) {
+      return sortChronologically(sessions).reverse();
+    }
+
+    // Statistics calculations.
+    function calculateDashboardStatistics(sessions) {
+      const totals = sessions.reduce(function (summary, session) {
+        summary.totalWords += session.totalWords;
+        summary.completedWords += session.completedWords;
+        summary.wordsAttempted += session.wordsAttempted;
+        summary.answersRecorded += session.answersRecorded;
+        if (Number.isFinite(session.averageResponseTime)) {
+          const responseCount = session.responses.filter(function (response) {
+            return response.presented && Number.isFinite(response.timeUsed) && response.timeUsed >= 0;
+          }).length;
+          if (responseCount) {
+            summary.timedSeconds += session.averageResponseTime * responseCount;
+            summary.timedResponses += responseCount;
+          } else {
+            summary.fallbackTimes.push(session.averageResponseTime);
+          }
+        }
+        return summary;
+      }, {
+        totalWords: 0,
+        completedWords: 0,
+        wordsAttempted: 0,
+        answersRecorded: 0,
+        timedSeconds: 0,
+        timedResponses: 0,
+        fallbackTimes: []
+      });
+
+      const averageResponse = totals.timedResponses
+        ? totals.timedSeconds / totals.timedResponses
+        : (totals.fallbackTimes.length
+          ? totals.fallbackTimes.reduce(function (sum, value) { return sum + value; }, 0) / totals.fallbackTimes.length
+          : null);
+
+      return {
+        sessions: sessions.length,
+        wordsAttempted: totals.wordsAttempted,
+        answersRecorded: totals.answersRecorded,
+        averageCompletion: totals.totalWords > 0 ? (totals.completedWords / totals.totalWords) * 100 : null,
+        averageResponse: averageResponse,
+        streak: calculateCurrentStreak(sessions)
+      };
+    }
+
+    // Streak calculations.
+    function calculateCurrentStreak(sessions) {
+      const practiceDays = new Set(sessions.map(function (session) {
+        return localDateKey(session.completedAt);
+      }).filter(Boolean));
+      if (!practiceDays.size) return 0;
+
+      const today = startOfLocalDay(new Date());
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      let cursor;
+      if (practiceDays.has(localDateKey(today))) cursor = today;
+      else if (practiceDays.has(localDateKey(yesterday))) cursor = yesterday;
+      else return 0;
+
+      let streak = 0;
+      while (practiceDays.has(localDateKey(cursor))) {
+        streak += 1;
+        cursor = new Date(cursor);
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      return streak;
+    }
+
+    function calculateDailyActivity(sessions) {
+      const counts = new Map();
+      sessions.forEach(function (session) {
+        const key = localDateKey(session.completedAt);
+        if (key) counts.set(key, (counts.get(key) || 0) + 1);
+      });
+
+      const today = startOfLocalDay(new Date());
+      const days = [];
+      for (let offset = 6; offset >= 0; offset -= 1) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - offset);
+        days.push({ date: date, count: counts.get(localDateKey(date)) || 0 });
+      }
+      return days;
+    }
+
+    function getModeStatistics(sessions) {
+      const dashboard = calculateDashboardStatistics(sessions);
+      return {
+        sessions: dashboard.sessions,
+        averageCompletion: dashboard.averageCompletion,
+        averageResponse: dashboard.averageResponse,
+        answersRecorded: dashboard.answersRecorded
+      };
+    }
+
+    // Summary rendering.
+    function renderSummaryCards(sessions) {
+      const statistics = calculateDashboardStatistics(sessions);
+      dom.statSessions.textContent = String(statistics.sessions);
+      dom.statAttempted.textContent = String(statistics.wordsAttempted);
+      dom.statAnswers.textContent = String(statistics.answersRecorded);
+      dom.statCompletion.textContent = formatPercent(statistics.averageCompletion);
+      dom.statResponse.textContent = formatSeconds(statistics.averageResponse);
+      dom.statStreak.textContent = String(statistics.streak);
+      dom.welcomeStreakText.textContent = 'Current streak: ' + statistics.streak + (statistics.streak === 1 ? ' day' : ' days');
+    }
+
+    // Progress chart rendering.
+    function renderProgressChart(sessions) {
+      const chartSessions = sortChronologically(sessions).slice(-10);
+      dom.progressChart.replaceChildren();
+      dom.chartScroll.hidden = chartSessions.length === 0;
+      dom.chartEmpty.hidden = chartSessions.length !== 0;
+      dom.chartHelp.textContent = state.chartMetric === 'completion'
+        ? 'Completion is calculated from words completed across each session.'
+        : 'Lower response time means faster responding; faster does not automatically mean better performance.';
+
+      if (!chartSessions.length) return;
+
+      const finiteResponseTimes = chartSessions
+        .map(function (session) { return session.averageResponseTime; })
+        .filter(Number.isFinite);
+      const responseMaximum = finiteResponseTimes.length ? Math.max.apply(null, finiteResponseTimes.concat([1])) : 1;
+
+      chartSessions.forEach(function (session) {
+        const value = state.chartMetric === 'completion' ? session.completionPercentage : session.averageResponseTime;
+        const valueText = state.chartMetric === 'completion' ? formatPercent(value) : formatSeconds(value);
+        const height = Number.isFinite(value)
+          ? (state.chartMetric === 'completion' ? Math.max(3, Math.min(100, value)) : Math.max(3, (value / responseMaximum) * 100))
+          : 3;
+        const item = document.createElement('div');
+        const label = document.createElement('span');
+        const track = document.createElement('div');
+        const bar = document.createElement('div');
+        const date = document.createElement('span');
+
+        item.className = 'chart-item';
+        item.setAttribute('aria-label', formatShortDate(session.completedAt) + ': ' + valueText);
+        label.className = 'chart-value';
+        label.textContent = valueText;
+        track.className = 'bar-track';
+        bar.className = 'chart-bar';
+        bar.style.height = height + '%';
+        bar.setAttribute('aria-hidden', 'true');
+        date.className = 'chart-date';
+        date.textContent = formatShortDate(session.completedAt);
+        track.appendChild(bar);
+        item.append(label, track, date);
+        dom.progressChart.appendChild(item);
+      });
+
+      dom.progressChart.setAttribute('aria-label', (state.chartMetric === 'completion' ? 'Completion rate' : 'Average response time') + ' across ' + chartSessions.length + ' sessions');
+    }
+
+    // Improvement comparison rendering.
+    function renderImprovementComparison(sessions) {
+      const ordered = sortChronologically(sessions);
+      dom.improvementList.replaceChildren();
+      dom.improvementEmpty.hidden = ordered.length >= 2;
+      if (ordered.length < 2) return;
+
+      const previous = ordered[ordered.length - 2];
+      const latest = ordered[ordered.length - 1];
+      const items = [
+        {
+          label: 'Completion',
+          text: describePointChange(latest.completionPercentage, previous.completionPercentage)
+        },
+        {
+          label: 'Response time',
+          text: describeTimeChange(latest.averageResponseTime, previous.averageResponseTime)
+        },
+        {
+          label: 'Answers recorded',
+          text: describeNumberChange(latest.answersRecorded, previous.answersRecorded)
+        }
+      ];
+
+      items.forEach(function (item) {
+        const row = document.createElement('li');
+        const label = document.createElement('span');
+        const value = document.createElement('span');
+        label.className = 'comparison-label';
+        label.textContent = item.label;
+        value.className = 'comparison-value';
+        value.textContent = item.text;
+        row.append(label, value);
+        dom.improvementList.appendChild(row);
+      });
+    }
+
+    function describePointChange(latest, previous) {
+      if (!Number.isFinite(latest) || !Number.isFinite(previous)) return 'Not enough timing data';
+      const difference = Math.round((latest - previous) * 10) / 10;
+      if (difference === 0) return 'No change';
+      return Math.abs(difference) + ' percentage ' + (Math.abs(difference) === 1 ? 'point' : 'points') + (difference > 0 ? ' higher' : ' lower');
+    }
+
+    function describeTimeChange(latest, previous) {
+      if (!Number.isFinite(latest) || !Number.isFinite(previous)) return 'Not enough timing data';
+      const difference = Math.round((latest - previous) * 10) / 10;
+      if (difference === 0) return 'No change';
+      return Math.abs(difference) + ' ' + (Math.abs(difference) === 1 ? 'second' : 'seconds') + (difference < 0 ? ' faster' : ' slower');
+    }
+
+    function describeNumberChange(latest, previous) {
+      const difference = latest - previous;
+      if (difference === 0) return 'No change';
+      return (difference > 0 ? '+' : '') + difference;
+    }
+
+    // Mode comparison rendering.
+    function renderModeComparison(sessions) {
+      dom.modeGrid.replaceChildren();
+      ['training', 'simulation'].forEach(function (mode) {
+        const modeSessions = sessions.filter(function (session) { return session.practiceMode === mode; });
+        const card = document.createElement('article');
+        const title = document.createElement('h3');
+        card.className = 'mode-card';
+        title.textContent = formatMode(mode);
+        card.appendChild(title);
+
+        if (!modeSessions.length) {
+          const empty = document.createElement('p');
+          empty.className = 'mode-empty';
+          empty.textContent = 'No ' + formatMode(mode) + ' sessions yet';
+          card.appendChild(empty);
+        } else {
+          const statistics = getModeStatistics(modeSessions);
+          const list = document.createElement('dl');
+          list.className = 'mode-stats';
+          [
+            ['Sessions', String(statistics.sessions)],
+            ['Avg. completion', formatPercent(statistics.averageCompletion)],
+            ['Avg. response', formatSeconds(statistics.averageResponse)],
+            ['Answers recorded', String(statistics.answersRecorded)]
+          ].forEach(function (entry) {
+            const wrapper = document.createElement('div');
+            const term = document.createElement('dt');
+            const value = document.createElement('dd');
+            term.textContent = entry[0];
+            value.textContent = entry[1];
+            wrapper.append(term, value);
+            list.appendChild(wrapper);
+          });
+          card.appendChild(list);
+        }
+        dom.modeGrid.appendChild(card);
+      });
+    }
+
+    // Consistency rendering.
+    function renderWeeklyActivity(sessions) {
+      dom.weekRow.replaceChildren();
+      calculateDailyActivity(sessions).forEach(function (day) {
+        const card = document.createElement('div');
+        const name = document.createElement('span');
+        const count = document.createElement('span');
+        const dayName = new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(day.date);
+        card.className = 'day-card' + (day.count ? ' has-practice' : '');
+        card.setAttribute('aria-label', dayName + ': ' + (day.count ? day.count + (day.count === 1 ? ' session' : ' sessions') : 'No practice'));
+        name.className = 'day-name';
+        name.textContent = dayName;
+        count.className = 'day-count';
+        count.textContent = day.count ? day.count + (day.count === 1 ? ' session' : ' sessions') : 'No practice';
+        card.append(name, count);
+        dom.weekRow.appendChild(card);
+      });
+    }
+
+    // Session filtering.
+    function getFilteredHistory(sessions) {
+      return sortMostRecent(sessions).filter(function (session) {
+        const modeMatches = state.modeFilter === 'all' || session.practiceMode === state.modeFilter;
+        const statusMatches = state.statusFilter === 'all' ||
+          (state.statusFilter === 'early' && session.endedEarly) ||
+          (state.statusFilter === 'completed' && !session.endedEarly);
+        return modeMatches && statusMatches;
+      });
+    }
+
+    // Session history rendering.
+    function renderSessionHistory(sessions) {
+      const filtered = getFilteredHistory(sessions);
+      const visible = filtered.slice(0, state.visibleSessions);
+      dom.sessionList.replaceChildren();
+      dom.historyCount.textContent = filtered.length + (filtered.length === 1 ? ' matching session' : ' matching sessions');
+      dom.historyEmpty.hidden = filtered.length !== 0;
+      dom.loadMoreWrap.hidden = filtered.length <= state.visibleSessions;
+
+      visible.forEach(function (session) {
+        const item = document.createElement('li');
+        const card = document.createElement('article');
+        const top = document.createElement('div');
+        const date = document.createElement('p');
+        const time = document.createElement('span');
+        const status = document.createElement('span');
+        const mode = document.createElement('p');
+        const facts = document.createElement('div');
+        const actions = document.createElement('div');
+        const details = document.createElement('button');
+        const remove = document.createElement('button');
+
+        card.className = 'session-card' + (session.endedEarly ? ' ended-early' : '');
+        top.className = 'session-top';
+        date.className = 'session-date';
+        date.textContent = formatDate(session.completedAt);
+        time.className = 'session-time';
+        time.textContent = formatTime(session.completedAt);
+        date.appendChild(time);
+        status.className = 'status-badge';
+        status.textContent = session.endedEarly ? 'Ended Early' : 'Session Complete';
+        top.append(date, status);
+
+        mode.className = 'session-mode';
+        mode.textContent = formatMode(session.practiceMode) + ' · ' + formatMode(session.responseMode);
+        facts.className = 'session-facts';
+        [
+          [session.completedWords + ' of ' + session.totalWords, 'Words completed'],
+          [String(session.answersRecorded), 'Answers recorded'],
+          [formatPercent(session.completionPercentage), 'Completion'],
+          [formatSeconds(session.averageResponseTime), 'Average response']
+        ].forEach(function (fact) {
+          const wrapper = document.createElement('div');
+          const value = document.createElement('span');
+          const label = document.createElement('span');
+          wrapper.className = 'fact';
+          value.className = 'fact-value';
+          value.textContent = fact[0];
+          label.className = 'fact-label';
+          label.textContent = fact[1];
+          wrapper.append(value, label);
+          facts.appendChild(wrapper);
+        });
+
+        actions.className = 'card-actions';
+        details.className = 'secondary-button';
+        details.type = 'button';
+        details.textContent = 'View Details';
+        details.setAttribute('aria-label', 'View details for session on ' + formatDate(session.completedAt));
+        details.addEventListener('click', function () { viewSessionDetails(session); });
+        remove.className = 'danger-button';
+        remove.type = 'button';
+        remove.textContent = 'Delete';
+        remove.setAttribute('aria-label', 'Delete session on ' + formatDate(session.completedAt));
+        remove.addEventListener('click', function () { deleteSession(session); });
+        actions.append(details, remove);
+
+        card.append(top, mode, facts, actions);
+        item.appendChild(card);
+        dom.sessionList.appendChild(item);
+      });
+    }
+
+    function viewSessionDetails(session) {
+      try {
+        localStorage.setItem(LATEST_SESSION_KEY, JSON.stringify(createResultSession(session)));
+        window.location.href = 'wat-results.html';
+      } catch (error) {
+        console.error('Could not open the selected WAT session:', error);
+      }
+    }
+
+    // Session deletion.
+    function deleteSession(session) {
+      const confirmed = window.confirm('Delete this practice session? This action cannot be undone.');
+      if (!confirmed) return;
+
+      const selectedIndex = state.rawHistory.findIndex(function (candidate, index) {
+        if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return false;
+        const candidateId = typeof candidate.id === 'string' && candidate.id.trim()
+          ? candidate.id.trim()
+          : 'legacy-' + index + '-' + String(candidate.completedAt || candidate.startedAt || 'undated');
+        return candidateId === session.id;
+      });
+      if (selectedIndex < 0) {
+        console.warn('The selected WAT session could not be found in saved history.');
+        return;
+      }
+      const updated = state.rawHistory.filter(function (_, index) { return index !== selectedIndex; });
+      try {
+        localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(updated));
+        removeLatestSessionIfMatching(session);
+        initializeDashboard();
+      } catch (error) {
+        console.error('Could not delete the selected WAT session:', error);
+      }
+    }
+
+    function removeLatestSessionIfMatching(session) {
+      try {
+        const latestRaw = localStorage.getItem(LATEST_SESSION_KEY);
+        if (!latestRaw) return;
+        const latest = JSON.parse(latestRaw);
+        const idMatches = latest && latest.id && latest.id === session.id;
+        const dateMatches = latest && String(latest.completedAt || '') === String(session.raw.completedAt || session.raw.endedAt || '');
+        if (idMatches || dateMatches) localStorage.removeItem(LATEST_SESSION_KEY);
+      } catch (error) {
+        console.warn('Could not compare the latest WAT session while deleting history:', error);
+      }
+    }
+
+    function clearAllHistory() {
+      const confirmed = window.confirm('Delete all WAT practice history? This action cannot be undone.');
+      if (!confirmed) return;
+      try {
+        localStorage.removeItem(SESSION_HISTORY_KEY);
+        localStorage.removeItem(LATEST_SESSION_KEY);
+        initializeDashboard();
+      } catch (error) {
+        console.error('Could not clear WAT practice history:', error);
+      }
+    }
+
+    // Empty-state rendering.
+    function renderEmptyState() {
+      const hasSessions = state.sessions.length > 0;
+      dom.emptyDashboard.hidden = hasSessions;
+      dom.dashboardContent.hidden = !hasSessions;
+    }
+
+    // Dashboard rendering and initialization.
+    function renderDashboard() {
+      renderEmptyState();
+      if (!state.sessions.length) return;
+      const rangeSessions = filterSessionsByDate(state.sessions, state.range);
+      renderSummaryCards(rangeSessions);
+      renderProgressChart(rangeSessions);
+      renderImprovementComparison(rangeSessions);
+      renderModeComparison(rangeSessions);
+      renderWeeklyActivity(state.sessions);
+      renderSessionHistory(rangeSessions);
+    }
+
+    function initializeDashboard() {
+      const loaded = loadSessionHistory();
+      state.rawHistory = loaded.raw;
+      state.sessions = loaded.valid;
+      state.visibleSessions = 5;
+      renderDashboard();
+    }
+
+    dom.dateRange.addEventListener('change', function () {
+      state.range = dom.dateRange.value;
+      state.visibleSessions = 5;
+      renderDashboard();
+    });
+
+    dom.metricButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        state.chartMetric = button.dataset.metric;
+        dom.metricButtons.forEach(function (candidate) {
+          candidate.setAttribute('aria-pressed', String(candidate === button));
+        });
+        renderProgressChart(filterSessionsByDate(state.sessions, state.range));
+      });
+    });
+
+    dom.modeFilter.addEventListener('change', function () {
+      state.modeFilter = dom.modeFilter.value;
+      state.visibleSessions = 5;
+      renderSessionHistory(filterSessionsByDate(state.sessions, state.range));
+    });
+
+    dom.statusFilter.addEventListener('change', function () {
+      state.statusFilter = dom.statusFilter.value;
+      state.visibleSessions = 5;
+      renderSessionHistory(filterSessionsByDate(state.sessions, state.range));
+    });
+
+    dom.showMore.addEventListener('click', function () {
+      state.visibleSessions += 5;
+      renderSessionHistory(filterSessionsByDate(state.sessions, state.range));
+    });
+
+    dom.clearHistory.addEventListener('click', clearAllHistory);
+    initializeDashboard();
+  </script>
+</body>
+</html>
