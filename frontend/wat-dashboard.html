@@ -995,8 +995,14 @@
 
     function validateSession(value) {
       if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-      if (value.testType && String(value.testType).toUpperCase() !== 'WAT') return false;
-      return Array.isArray(value.responses) ||
+      const declaredType = typeof value.testType === 'string' ? value.testType.toUpperCase() : '';
+      if (declaredType && declaredType !== 'WAT') return false;
+      const responses = Array.isArray(value.responses) ? value.responses : [];
+      const clearlyContainsWatResponses = responses.some(function (response) {
+        return response && typeof response === 'object' && typeof response.word === 'string';
+      });
+      if (!declaredType && !clearlyContainsWatResponses) return false;
+      return responses.length > 0 ||
         Number.isFinite(Number(value.totalWords)) ||
         Number.isFinite(Number(value.completedWords));
     }
@@ -1012,13 +1018,14 @@
           word: typeof safe.word === 'string' && safe.word.trim() ? safe.word.trim() : 'Word ' + (position + 1),
           answer: typeof safe.answer === 'string' ? safe.answer : '',
           responseMode: responseMode,
-          presented: Boolean(safe.presented || safe.completed),
+          attempted: Boolean(safe.attempted || safe.presented || safe.completed),
+          presented: Boolean(safe.attempted || safe.presented || safe.completed),
           completed: Boolean(safe.completed),
           timeUsed: getSafeNumber(safe.timeUsed, null, 0)
         };
       }).sort(function (a, b) { return a.index - b.index; });
 
-      const reachedResponses = responses.filter(function (response) { return response.presented || response.completed; });
+      const reachedResponses = responses.filter(function (response) { return response.attempted || response.presented || response.completed; });
       const completedResponses = responses.filter(function (response) { return response.completed; });
       const answerResponses = reachedResponses.filter(function (response) {
         return (response.responseMode === 'paper' && response.completed) ||
@@ -1044,12 +1051,13 @@
         : getSafeNumber(session.averageResponseTime, null, 0);
       const endedEarly = typeof session.endedEarly === 'boolean'
         ? session.endedEarly
-        : totalWords > 0 && completedWords < totalWords;
+        : false;
       const id = typeof session.id === 'string' && session.id.trim()
         ? session.id.trim()
         : 'legacy-' + sourceIndex + '-' + String(session.completedAt || session.startedAt || 'undated');
 
       return {
+        schemaVersion: getSafeInteger(session.schemaVersion, 1, 1),
         id: id,
         sourceIndex: sourceIndex,
         raw: session,
@@ -1086,6 +1094,7 @@
           }).length
         : 0;
       return {
+        schemaVersion: 1,
         id: session.id,
         testType: 'WAT',
         startedAt: session.startedAt ? session.startedAt.toISOString() : null,
@@ -1102,13 +1111,18 @@
               return response.completed && response.responseMode !== 'paper' && !response.answer.trim();
             }).length
           : Math.max(0, session.completedWords - session.answersRecorded),
+        notAttemptedWords: Math.max(0, session.totalWords - session.wordsAttempted),
         completionPercentage: session.completionPercentage,
         totalDurationSeconds: session.totalDurationSeconds,
         averageResponseTime: session.averageResponseTime,
         fastestResponseTime: session.fastestResponseTime,
         slowestResponseTime: session.slowestResponseTime,
         endedEarly: session.endedEarly,
-        responses: session.responses
+        responses: session.responses.map(function (response) {
+          return Object.assign({}, response, {
+            attempted: Boolean(response.attempted || response.presented || response.completed)
+          });
+        })
       };
     }
 
@@ -1544,7 +1558,7 @@
         details.type = 'button';
         details.textContent = 'View Details';
         details.setAttribute('aria-label', 'View details for session on ' + formatDate(session.completedAt));
-        details.addEventListener('click', function () { viewSessionDetails(session); });
+        details.addEventListener('click', function () { viewSessionDetails(session.id); });
         remove.className = 'danger-button';
         remove.type = 'button';
         remove.textContent = 'Delete';
@@ -1558,7 +1572,12 @@
       });
     }
 
-    function viewSessionDetails(session) {
+    function viewSessionDetails(sessionId) {
+      const session = state.sessions.find(function (candidate) { return candidate.id === sessionId; });
+      if (!session) {
+        console.error('Selected WAT session was not found.');
+        return;
+      }
       try {
         localStorage.setItem(LATEST_SESSION_KEY, JSON.stringify(createResultSession(session)));
         window.location.href = 'wat-results.html';
@@ -1684,3 +1703,4 @@
   </script>
 </body>
 </html>
+

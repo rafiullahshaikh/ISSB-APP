@@ -151,19 +151,27 @@
 
     .menu-open .site-nav { display: block; }
 
-    .site-nav a {
+    .site-nav a,
+    .site-nav button {
       min-height: 48px;
       display: flex;
       align-items: center;
       padding: 10px 14px;
       color: rgba(255, 253, 246, 0.78);
+      background: transparent;
+      border: 0;
+      border-radius: 0;
       text-decoration: none;
+      font: inherit;
       font-size: 0.95rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
     }
 
     .site-nav a:hover,
-    .site-nav a:focus-visible { color: var(--brass-light); }
+    .site-nav a:focus-visible,
+    .site-nav button:hover,
+    .site-nav button:focus-visible { color: var(--brass-light); }
 
     .site-nav .sign-in {
       justify-content: center;
@@ -289,6 +297,7 @@
       background: var(--brass-light);
       border: 1px solid var(--brass-light);
       border-radius: var(--radius);
+      font: inherit;
       font-weight: 800;
       line-height: 1.25;
       text-align: center;
@@ -822,13 +831,21 @@
       gap: 10px 18px;
     }
 
-    .footer-links a {
+    .footer-links a,
+    .footer-links button {
       color: rgba(255, 253, 246, 0.68);
+      padding: 0;
+      background: transparent;
+      border: 0;
+      font: inherit;
       font-size: 0.79rem;
+      text-decoration: underline;
       text-underline-offset: 4px;
+      cursor: pointer;
     }
 
-    .footer-links a:hover { color: var(--brass-light); }
+    .footer-links a:hover,
+    .footer-links button:hover { color: var(--brass-light); }
 
     .copyright {
       padding-top: 22px;
@@ -912,7 +929,8 @@
         box-shadow: none;
       }
 
-      .site-nav a {
+      .site-nav a,
+      .site-nav button {
         min-height: 42px;
         padding: 8px 10px;
         border: 0;
@@ -941,7 +959,8 @@
 
     @media (min-width: 1040px) {
       section { padding-block: 98px; }
-      .site-nav a { padding-inline: 14px; }
+      .site-nav a,
+      .site-nav button { padding-inline: 14px; }
       .mode-grid { gap: 16px; }
       .mode-card { min-height: 190px; padding: 28px; }
     }
@@ -985,7 +1004,7 @@
         <a href="wat-dashboard.html">Progress</a>
         <a href="#learn">Learn</a>
         <a href="#pricing">Pricing</a>
-        <a class="sign-in placeholder-action" href="#">Sign in</a>
+        <button class="sign-in placeholder-action" type="button">Sign in</button>
       </nav>
     </div>
   </header>
@@ -998,7 +1017,7 @@
           <h1>Train under the clock. See what improves.</h1>
           <p>Practise realistic Word Association Tests, receive structured feedback on every sentence, and track the patterns that matter across sessions.</p>
           <div class="button-row">
-            <a class="button placeholder-action" href="#">Start free WAT diagnostic <span aria-hidden="true">→</span></a>
+            <a class="button" href="wat-practice.html">Start free WAT diagnostic <span aria-hidden="true">→</span></a>
             <span class="hero-note">
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="7.5" cy="7.5" r="6.5" stroke="currentColor"/><path d="M7.5 4v4l2.5 1.5" stroke="currentColor" stroke-linecap="round"/></svg>
               No payment required
@@ -1187,7 +1206,7 @@
               <li>Sentence-by-sentence review</li>
               <li>Baseline strengths and gaps</li>
             </ul>
-            <a class="button button-outline placeholder-action" href="#">Start diagnostic</a>
+            <a class="button button-outline" href="wat-practice.html">Start diagnostic</a>
           </article>
 
           <article class="price-card featured">
@@ -1200,7 +1219,7 @@
               <li>Targeted follow-up drills</li>
               <li>Access for 30 days</li>
             </ul>
-            <a class="button button-outline placeholder-action" href="#">Join the founding list</a>
+            <button class="button button-outline placeholder-action" type="button">Join the founding list</button>
           </article>
         </div>
       </div>
@@ -1221,11 +1240,11 @@
           <p>Structured practice for candidates preparing to lead.</p>
         </div>
         <nav class="footer-links" aria-label="Footer navigation">
-          <a class="placeholder-action" href="#">Contact</a>
-          <a class="placeholder-action" href="#">WhatsApp</a>
-          <a class="placeholder-action" href="#">Terms</a>
-          <a class="placeholder-action" href="#">Privacy</a>
-          <a class="placeholder-action" href="#">Refund policy</a>
+          <button class="placeholder-action" type="button">Contact</button>
+          <button class="placeholder-action" type="button">WhatsApp</button>
+          <button class="placeholder-action" type="button">Terms</button>
+          <button class="placeholder-action" type="button">Privacy</button>
+          <button class="placeholder-action" type="button">Refund policy</button>
           <a href="https://issb.gov.pk/" target="_blank" rel="noopener noreferrer">Official ISSB ↗</a>
         </nav>
       </div>
@@ -1304,3 +1323,4 @@
   </script>
 </body>
 </html>
+

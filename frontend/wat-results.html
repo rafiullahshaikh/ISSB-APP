@@ -844,14 +844,31 @@
       }
     }
 
-    function validateSession(value) {
-      return Boolean(
-        value &&
-        typeof value === 'object' &&
-        !Array.isArray(value) &&
-        value.testType === 'WAT' &&
-        Array.isArray(value.responses)
-      );
+    function normalizeSession(value) {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+      const rawResponses = Array.isArray(value.responses) ? value.responses : [];
+      const declaredType = typeof value.testType === 'string' ? value.testType.toUpperCase() : '';
+      const clearlyContainsWatResponses = rawResponses.some(function (response) {
+        return response && typeof response === 'object' && typeof response.word === 'string';
+      });
+      if (declaredType && declaredType !== 'WAT') return null;
+      if (!declaredType && !clearlyContainsWatResponses) return null;
+
+      return Object.assign({}, value, {
+        schemaVersion: getSafeInteger(value.schemaVersion, 1, 1),
+        testType: 'WAT',
+        practiceMode: normalizeMode(value.practiceMode || value.mode, 'training'),
+        responseMode: normalizeMode(value.responseMode, 'typing'),
+        secondsPerWord: getSafeNumber(value.secondsPerWord, null, 0),
+        totalWords: getSafeInteger(value.totalWords, rawResponses.length, 0),
+        completedWords: getSafeInteger(value.completedWords, 0, 0),
+        answeredWords: getSafeInteger(value.answeredWords, 0, 0),
+        paperResponses: getSafeInteger(value.paperResponses, 0, 0),
+        unansweredWords: getSafeInteger(value.unansweredWords, 0, 0),
+        notAttemptedWords: getSafeInteger(value.notAttemptedWords, 0, 0),
+        endedEarly: typeof value.endedEarly === 'boolean' ? value.endedEarly : false,
+        responses: rawResponses
+      });
     }
 
     function normalizeResponses(session) {
@@ -867,7 +884,8 @@
             : 'Word ' + (index + 1),
           answer: typeof safeResponse.answer === 'string' ? safeResponse.answer : '',
           responseMode: mode,
-          presented: Boolean(safeResponse.presented || safeResponse.completed),
+          attempted: Boolean(safeResponse.attempted || safeResponse.presented || safeResponse.completed),
+          presented: Boolean(safeResponse.attempted || safeResponse.presented || safeResponse.completed),
           completed: Boolean(safeResponse.completed),
           timeUsed: getSafeNumber(safeResponse.timeUsed, null, 0)
         };
@@ -1138,14 +1156,15 @@
     // Page initialization.
     function initializeResultsPage() {
       const loaded = loadLatestSession();
-      if (!validateSession(loaded)) {
+      const normalized = normalizeSession(loaded);
+      if (!normalized) {
         renderEmptyState(loaded ? 'Saved data did not pass validation.' : 'No saved session was found.');
         return;
       }
 
       try {
-        const responses = normalizeResponses(loaded);
-        activeSession = Object.assign({}, loaded, { responses: responses });
+        const responses = normalizeResponses(normalized);
+        activeSession = Object.assign({}, normalized, { responses: responses });
         sessionStatistics = calculateSessionStatistics(activeSession, responses);
         renderSessionStatus(activeSession, sessionStatistics);
         renderSummary(activeSession, sessionStatistics);
@@ -1168,3 +1187,4 @@
   </script>
 </body>
 </html>
+
