@@ -1,30 +1,47 @@
-# Phase 2 verification status — 2026-10-08/09
+# Phase 2 verification status — 2026-10-13
 
-**Phase 2 is not complete.** The implementation is in the repository, but the new migrations and SQL suite have not passed a clean local reset. The real HTTP suite could not start because the local runtime is unavailable. The successful Phase 1 results below are historical; they do not verify the new migrations.
+**Phase 2 is not complete.** The implementation and offline tests are committed
+to GitHub, but the new migrations and SQL suite have not passed a clean local
+reset. The real HTTP suite could not start because Docker Desktop's WSL engine
+is unavailable. The successful Phase 1 results below are historical; they do
+not verify the new migrations.
 
 | Command/check | Current observed result |
 |---|---|
-| `node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/api_unit_test.ts` | PASS, exit 0: 22 tests, 22 passed, 0 failed. Rerun after adding the local module manifest also passed without the module-type warning. |
+| `npm run test:api:unit` | PASS, exit 0: 22 tests, 22 passed, 0 failed, duration 1.836 seconds. |
 | `python -u backend/scripts/verify_repository.py` | PASS, exit 0: contract/seed/security matrix, safe config, original three migration hashes, API specification hash, four HTML hashes, source credential scan, empty environment examples and generated-file ignores. |
 | `node backend/scripts/verify_frontend.cjs` | PASS, exit 0: all four inline scripts parse and local navigation links resolve. |
-| Node `--experimental-strip-types --check` on every function/test `.ts` file | PASS, exit 0 for every file. This is syntax checking, not Deno type checking or database execution. |
-| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js test db` | FAIL, exit 1 before tests: `DbConnectError`, connection to local PostgreSQL terminated unexpectedly. No new SQL assertions or original 406 assertions ran successfully in this attempt. |
-| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js db lint --local --level warning` | FAIL, exit 1 before lint: the same local PostgreSQL connection failure. Current migration lint warnings cannot be assessed. |
-| `node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/api_http_test.ts` | FAIL, exit 1: 1 top-level fixture test failed, 0 passed. Local Supabase status did not respond within 30 seconds; route subtests did not execute and no synthetic Auth users were created. |
-| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js db reset --local` | BLOCKED: final bounded attempt did not respond within 45 seconds; its command process tree was stopped. Earlier PTY attempts were cancelled after stalling. No successful clean reset or migration application result. |
-| Git tracking | Unavailable: workspace still has no `.git` metadata. No commits were made. |
+| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js status -o json` | BLOCKED before local status: Docker was paused. After restart, the Linux engine failed because `wsl.exe -l -v --all` timed out. |
+| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js db reset --local` | NOT RUN on 2026-10-13: no healthy local Docker engine was available. The new migrations remain runtime-unverified. |
+| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js test db` | NOT RUN on 2026-10-13: no healthy local PostgreSQL service was available. The original 406 assertions and 99 Phase 2 assertions did not execute. |
+| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js db lint --local --level warning` | NOT RUN on 2026-10-13: no healthy local PostgreSQL service was available. Current migration warnings cannot be assessed. |
+| `npm run test:api:http` | NOT RUN on 2026-10-13: gateway, Auth, PostgREST, database, and Edge Runtime were unavailable. No synthetic Auth users were created. |
+| Git tracking | PASS: local `main` tracks `origin/main`; baseline commit `f496070` was pushed to `https://github.com/rafiullahshaikh/ISSB-APP`. Pre-existing unstaged deletions of synced project files were deliberately not committed. |
 
 ## Runtime blockers and actions
 
-The installed CLI reports 2.119.0. Existing Docker Desktop was started; no package was installed and no Docker/WSL settings changed. The engine repeatedly became unavailable. When it responded, both Qiyadat and the unrelated `windows10` Supabase database stacks were unhealthy. A later Docker command failed with Windows `VirtualAlloc` errno 1455 / out of memory. Other commands stalled for long periods, including a machine suspension overnight.
+The installed CLI reports 2.119.0. On 2026-10-13 Docker Desktop was initially
+paused. Its existing background process was restarted without changing Docker
+or WSL configuration. The Linux engine did not become available: Docker's local
+log records `wsl.exe -l -v --all` timing out and engine recovery failing. The
+machine had about 753 MiB free physical memory during the first attempt and
+about 1 GiB after the failed Docker processes were stopped. No package, runtime
+image, or system update was installed.
 
-The cached Docker image list contains PostgreSQL, Auth, Storage, PostgREST, Kong and pg_prove, but **no Supabase Edge Runtime image**. Approval to download that image was requested, as required by the user's Phase 2 instructions; no download or hosted deployment was performed. A separate request asks the user to free memory by closing unused applications or an unused project.
+The earlier audit found cached PostgreSQL, Auth, Storage, PostgREST, Kong and
+pg_prove images, but no Supabase Edge Runtime image. No image was downloaded and
+no hosted project was linked or deployed.
 
 A recovery attempt temporarily stopped only Qiyadat's Auth/REST/Storage/metadata containers. Docker subsequently acknowledged both the stop and restoration commands for all four containers. Final database/application health remains unconfirmed; the unrelated stack was not changed. The stop command emitted a CLI deprecation warning for `--time` (use `--timeout`), unrelated to SQL migration lint.
 
 Initial PowerShell/PTY reset attempts stalled before useful reset output and were cancelled. The bounded reset had recreated the local database container but did not finish setup. The database was explicitly started afterward; Docker acknowledged it, and logs show a new PostgreSQL cluster initializing. The local database is therefore in a partial-reset state, not the previously verified Phase 1 database. A complete clean reset must be rerun before using the backend. The final bounded reset attempt timed out, as recorded in the table above. No successful clean reset or new-migration lint result is claimed. The original Phase 1 `private.payment_transaction_hash` unused-parameter warning was previously reviewed; any new warnings still require investigation.
 
-After memory/runtime recovery and approval for the missing image: run a clean reset, all database tests (original 406 plus 99 new API assertions), lint, serve `api` locally, and run the real HTTP suite. Fix any migration or integration failures before calling Phase 2 complete. `backend/README.md` documents commands, route coverage, contract decisions and deferred work.
+After memory/WSL runtime recovery: run a clean reset, all database tests
+(original 406 plus 99 new API assertions), lint, serve `api` locally, and run
+the real HTTP suite. If the Edge Runtime image is still missing, obtain explicit
+approval before downloading it. Fix every migration or integration failure
+before calling Phase 2 complete. `backend/README.md` documents commands, route
+coverage, contract decisions and deferred work.
 
 ---
 
