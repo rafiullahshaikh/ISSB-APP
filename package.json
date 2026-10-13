@@ -1,0 +1,9 @@
+{
+  "name": "qiyadat-backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:api:unit": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/api_unit_test.ts",
+    "test:api:http": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/api_http_test.ts"
+  }
+}

@@ -1,68 +1,59 @@
 # Qiyadat — ISSB WAT Practice
 
-Qiyadat is a mobile-first Word Association Test (WAT) practice prototype for ISSB candidates. The current release runs entirely in the browser with vanilla HTML, CSS, and JavaScript.
+Qiyadat is an independent Word Association Test practice prototype. The four
+HTML pages currently run in the browser with vanilla HTML, CSS, JavaScript, and
+local storage. Phase 1 adds the Supabase database and security foundation. Phase 2 adds an
+authenticated Edge Function API; frontend integration remains deferred. See
+`backend/VERIFICATION.md` for verified results and outstanding runtime blockers.
 
-## Current user flow
-
-```text
-index.html
-    ↓
-wat-practice.html
-    ↓
-wat-results.html
-    ↓
-wat-dashboard.html
-```
+`API_SPEC.md` is the binding API contract. It takes precedence over other
+documentation and implementation choices. The backend is Supabase-first:
+Supabase Auth, PostgreSQL with RLS, private Storage, and a Supabase Edge Function router.
 
 ## Project structure
 
 ```text
-.
-├── frontend/
-│   ├── index.html             # Landing page
-│   ├── wat-practice.html      # Timed WAT practice session
-│   ├── wat-results.html       # Latest-session results
-│   ├── wat-dashboard.html     # Progress and session history
-│   └── assets/
-│       └── images/            # Frontend screenshots and images
-├── backend/
-│   └── README.md              # Backend boundary and planned API work
-├── sources/                   # Read-only project reference material
-├── .gitignore
-└── README.md
+API_SPEC.md                 # Binding API contract
+index.html                  # Landing page
+wat-practice.html           # Existing practice flow, unchanged
+wat-results.html            # Latest-session results, unchanged
+wat-dashboard.html          # Local history and progress, unchanged
+supabase/
+  config.toml               # Local project configuration only
+  migrations/               # Versioned schema, integrity, RLS and Storage changes
+  seed.sql                  # Immutable diagnostic-v1 and safe defaults
+  tests/database/           # Transactional pgTAP security and constraint tests
+  functions/api/            # Authenticated API router and Deno entry point
+  functions/_shared/        # Auth, validation, envelopes, cursors and safe clients
+  functions/tests/          # Unit and real local HTTP integration tests
+backend/
+  README.md                 # Local setup, security model and deferred work
+  VERIFICATION.md           # Verification results and blockers
+  .env.example              # Names only; empty values
+  scripts/                  # Offline repository and frontend checks
 ```
 
-All frontend pages stay together under `frontend/`, so their existing relative navigation continues to work. Backend code will live separately under `backend/` when implementation begins.
+## Existing browser flow
 
-## Run locally
+Open `index.html`, then follow practice, results, and dashboard. Serve this
+directory through a local web server for consistent shared local storage.
+No frontend packages or build step are required.
 
-The pages can be opened directly, starting with `frontend/index.html`. For reliable shared `localStorage` behavior, serve the project through a simple local web server and open the local URL in a browser.
+Browser data remains under `issb_wat_latest_session` and
+`issb_wat_session_history`. Authenticated persistence and imports will be added
+in a later phase. The existing frontend supports options beyond the backend
+v1 contract; backend v1 supports exactly 20 words. This phase does not change
+the HTML behavior or silently relax that contract.
 
-No packages or build step are required for the current frontend. A future GitHub Pages deployment will need to publish the `frontend/` directory through a workflow or copy its contents into the deployment artifact.
+## Backend foundation
 
-## Browser storage
-
-The WAT flow currently uses:
-
-- `issb_wat_latest_session` for the result currently being viewed.
-- `issb_wat_session_history` for dashboard history.
-
-This data stays in the user's browser and may be lost if browser storage is cleared. The planned backend will replace browser-only persistence with authenticated API storage.
-
-## Current scope
-
-- Responsive landing page
-- Training and Simulation WAT modes
-- Typing and Paper response modes
-- Timed word progression
-- Session result review
-- Local progress dashboard
-
-## Planned backend
-
-The backend will be added after the frontend flow is stable. Planned work includes FastAPI endpoints, Supabase persistence, authentication, secure image uploads, and OCR processing. API credentials and service keys must remain in backend environment variables and must never be committed.
+See [backend setup](backend/README.md) for local Supabase reset, seeding, and
+test commands, and [verification status](backend/VERIFICATION.md) for current
+results. A clean local reset and all 406 database/security tests passed on
+2026-10-05. No hosted project is linked or deployed.
 
 ## Disclaimer
 
-Qiyadat is an independent preparation project. It is not affiliated with ISSB, the Pakistan Armed Forces, or any government organization. Practice statistics are not an official psychological assessment or selection prediction.
-
+Qiyadat is not affiliated with ISSB, the Pakistan Armed Forces, or a government
+organization. Practice feedback is not an official assessment, psychological
+diagnosis, or selection prediction.

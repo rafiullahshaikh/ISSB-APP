@@ -22,9 +22,21 @@ venv/
 *.log
 *.tmp
 *.temp
+*.bak
 
 # Local uploads and generated backend data
 backend/uploads/
 backend/data/
 
-
+# Local Supabase runtime, linked project state, and generated exports
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+supabase/.env.*
+!supabase/.env.example
+supabase/.cache/
+supabase/backups/
+supabase/exports/
+backend/verification-output/
+node_modules/
+coverage/
