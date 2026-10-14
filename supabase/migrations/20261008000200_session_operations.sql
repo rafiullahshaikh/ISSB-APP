@@ -130,7 +130,7 @@ create function private.api_import_session(actor uuid, body jsonb, at_time times
 language plpgsql set search_path = '' as $$
 declare ws public.wat_sets; s public.wat_sessions; item jsonb; expected text; value text; started timestamptz;
  completed_at timestamptz; position_value integer; completed_value boolean; count_completed integer:=0;
- has_text boolean:=false; hash_value text; previous_hash text; seen integer[]:='{}'; elapsed integer; begin
+ has_text boolean:=false; hash_value text; previous_hash text; seen integer[]:=array[]::integer[]; elapsed integer; begin
  perform private.api_fields(body,
  array['schema_version','client_session_id','source','set_code','set_version','kind','practice_mode','response_mode','started_at','completed_at','ended_early','responses'],
  array['schema_version','client_session_id','source','set_code','set_version','kind','practice_mode','response_mode','started_at','completed_at','ended_early','responses']);

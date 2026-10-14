@@ -47,7 +47,7 @@ insert into public.app_settings(key, value) values
 on conflict (key) do nothing;
 
 create function private.api_fail(code text, field_name text default null, field_message text default null)
-returns void language plpgsql set search_path = '' as $$ begin
+returns void language plpgsql stable set search_path = '' as $$ begin
   raise exception using errcode = 'P0001', message = code,
     detail = case when field_name is null then '{}' else
       jsonb_build_object('fields', jsonb_build_object(field_name, coalesce(field_message, 'Invalid value.')))::text end;
@@ -62,7 +62,7 @@ language sql stable set search_path = '' as $$
  select coalesce((select value = 'true'::jsonb from public.app_settings where key = name), false);
 $$;
 create function private.api_assert_service() returns void
-language plpgsql stable set search_path = '' as $$ begin
+language plpgsql volatile set search_path = '' as $$ begin
  if coalesce(auth.role(), '') <> 'service_role' then perform private.api_fail('FORBIDDEN'); end if;
 end $$;
 create function private.api_actor(actor uuid) returns void
@@ -72,7 +72,7 @@ language plpgsql set search_path = '' as $$ begin
  if not found then perform private.api_fail('AUTH_INVALID'); end if;
 end $$;
 create function private.api_fields(body jsonb, allowed text[], required text[]) returns void
-language plpgsql immutable set search_path = '' as $$ declare field text; begin
+language plpgsql stable set search_path = '' as $$ declare field text; begin
  if jsonb_typeof(body) is distinct from 'object' then perform private.api_fail('VALIDATION_ERROR','body','Must be an object.'); end if;
  for field in select jsonb_object_keys(body) loop
    if not field = any(allowed) then perform private.api_fail('VALIDATION_ERROR','body','Unknown properties are not allowed.'); end if;
@@ -82,14 +82,14 @@ language plpgsql immutable set search_path = '' as $$ declare field text; begin
  end loop;
 end $$;
 create function private.api_string(body jsonb, field text, minimum integer, maximum integer) returns text
-language plpgsql immutable set search_path = '' as $$ declare value text; begin
+language plpgsql stable set search_path = '' as $$ declare value text; begin
  value := body->>field;
  if jsonb_typeof(body->field) is distinct from 'string' or char_length(value) not between minimum and maximum
  then perform private.api_fail('VALIDATION_ERROR',field,'Invalid text length or type.'); end if;
  return value;
 end $$;
 create function private.api_integer(body jsonb, field text, minimum bigint, maximum bigint) returns bigint
-language plpgsql immutable set search_path = '' as $$ declare value numeric; begin
+language plpgsql stable set search_path = '' as $$ declare value numeric; begin
  if jsonb_typeof(body->field) is distinct from 'number' then perform private.api_fail('VALIDATION_ERROR',field,'Must be an integer.'); end if;
  value := (body->>field)::numeric;
  if value <> trunc(value) or value not between minimum and maximum then
@@ -108,13 +108,13 @@ language plpgsql stable set search_path = '' as $$ declare value text; parsed ti
  return parsed;
 end $$;
 create function private.api_choice(body jsonb, field text, choices text[]) returns text
-language plpgsql immutable set search_path = '' as $$ declare value text; begin
+language plpgsql stable set search_path = '' as $$ declare value text; begin
  value := private.api_string(body,field,1,128);
  if not value = any(choices) then perform private.api_fail('VALIDATION_ERROR',field,'Unsupported value.'); end if;
  return value;
 end $$;
 create function private.api_modes(body jsonb) returns void
-language plpgsql immutable set search_path = '' as $$ begin
+language plpgsql stable set search_path = '' as $$ begin
  perform private.api_choice(body,'kind',array['diagnostic','practice']);
  perform private.api_choice(body,'practice_mode',array['training','simulation']);
  perform private.api_choice(body,'response_mode',array['typing','paper']);
