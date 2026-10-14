@@ -1,47 +1,46 @@
-# Phase 2 verification status — 2026-10-13
+# Phase 2 verification status — 2026-10-14
 
-**Phase 2 is not complete.** The implementation and offline tests are committed
-to GitHub, but the new migrations and SQL suite have not passed a clean local
-reset. The real HTTP suite could not start because Docker Desktop's WSL engine
-is unavailable. The successful Phase 1 results below are historical; they do
-not verify the new migrations.
+**Phase 2 is complete locally.** The authenticated API foundation and typed WAT
+lifecycle pass a clean rebuild, all database tests, unit tests and local HTTP
+integration tests. No hosted Supabase project was linked or deployed.
 
 | Command/check | Current observed result |
 |---|---|
-| `npm run test:api:unit` | PASS, exit 0: 22 tests, 22 passed, 0 failed, duration 1.836 seconds. |
-| `python -u backend/scripts/verify_repository.py` | PASS, exit 0: contract/seed/security matrix, safe config, original three migration hashes, API specification hash, four HTML hashes, source credential scan, empty environment examples and generated-file ignores. |
-| `node backend/scripts/verify_frontend.cjs` | PASS, exit 0: all four inline scripts parse and local navigation links resolve. |
-| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js status -o json` | BLOCKED before local status: Docker was paused. After restart, the Linux engine failed because `wsl.exe -l -v --all` timed out. |
-| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js db reset --local` | NOT RUN on 2026-10-13: no healthy local Docker engine was available. The new migrations remain runtime-unverified. |
-| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js test db` | NOT RUN on 2026-10-13: no healthy local PostgreSQL service was available. The original 406 assertions and 99 Phase 2 assertions did not execute. |
-| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js db lint --local --level warning` | NOT RUN on 2026-10-13: no healthy local PostgreSQL service was available. Current migration warnings cannot be assessed. |
-| `npm run test:api:http` | NOT RUN on 2026-10-13: gateway, Auth, PostgREST, database, and Edge Runtime were unavailable. No synthetic Auth users were created. |
-| Git tracking | PASS: local `main` tracks `origin/main`; baseline commit `f496070` was pushed to `https://github.com/rafiullahshaikh/ISSB-APP`. Pre-existing unstaged deletions of synced project files were deliberately not committed. |
+| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js db reset --local` | PASS, exit 0. Recreated the local database, applied all three unchanged Phase 1 migrations and all three Phase 2 migrations, seeded `supabase/seed.sql`, and restarted containers. |
+| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js test db` | PASS, exit 0. `Files=2, Tests=505`, all successful: 406 preserved Phase 1 assertions plus 99 Phase 2 assertions. |
+| `node C:\Users\windows10\node_modules\supabase\dist\supabase.js db lint --local --level warning` | PASS, exit 0. No errors or Phase 2 warnings. One reviewed Phase 1 `warning extra` remains for the intentionally reserved `method` parameter in `private.payment_transaction_hash`. |
+| `npm run test:api:unit` | PASS, exit 0: 22 tests passed, 0 failed, duration 2.311 seconds. |
+| `npm run test:api:http` | PASS, exit 0: 20 tests passed, 0 failed, duration 47.280 seconds against local Auth, PostgREST, PostgreSQL and Edge Runtime. |
+| `python backend/scripts/verify_repository.py` | PASS, exit 0: contract/seed/security matrix, original migration/spec/frontend hashes, safe configuration, source credential scan, environment examples and generated-file ignores. |
+| `node backend/scripts/verify_frontend.cjs` | PASS, exit 0: all four preserved frontend scripts parse and local navigation links resolve. |
+| Git tracking | PASS: local `main` tracks `origin/main`; verified implementation commits are pushed to `https://github.com/rafiullahshaikh/ISSB-APP`. Pre-existing unstaged deletions of synced project files were deliberately not committed. |
 
-## Runtime blockers and actions
+## Runtime notes
 
-The installed CLI reports 2.119.0. On 2026-10-13 Docker Desktop was initially
-paused. Its existing background process was restarted without changing Docker
-or WSL configuration. The Linux engine did not become available: Docker's local
-log records `wsl.exe -l -v --all` timing out and engine recovery failing. The
-machine had about 753 MiB free physical memory during the first attempt and
-about 1 GiB after the failed Docker processes were stopped. No package, runtime
-image, or system update was installed.
+The installed Supabase CLI is 2.119.0. Docker Desktop 4.95.0 with engine 29.8.2
+was healthy for the final run. The first reset during Docker warm-up lost its
+PostgreSQL connection before migrations ran; the retry and final verification
+reset both completed successfully. The approved local function serve operation
+downloaded only the missing Supabase Edge Runtime v1.77.1 image. No package,
+Docker/WSL configuration, project link, hosted secret or hosted deployment was
+created.
 
-The earlier audit found cached PostgreSQL, Auth, Storage, PostgREST, Kong and
-pg_prove images, but no Supabase Edge Runtime image. No image was downloaded and
-no hosted project was linked or deployed.
+The CLI-generated local Kong configuration attaches its own wildcard CORS
+plugin to `/functions/v1`, which intercepts browser preflights before the
+function. The HTTP suite therefore sends CORS preflights directly to the served
+function over the existing Docker network. It verifies `204` plus the exact
+allowed local origin, and `403 FORBIDDEN` with no allow-origin header for an
+untrusted origin. Every other HTTP assertion uses the documented public local
+URL. Application code never emits `Access-Control-Allow-Origin: *`.
 
-A recovery attempt temporarily stopped only Qiyadat's Auth/REST/Storage/metadata containers. Docker subsequently acknowledged both the stop and restoration commands for all four containers. Final database/application health remains unconfirmed; the unrelated stack was not changed. The stop command emitted a CLI deprecation warning for `--time` (use `--timeout`), unrelated to SQL migration lint.
+The gateway converts the function's strong ETag to a weak ETag when gzip is
+applied. Conditional configuration requests accept either representation and
+return `304`; both forms are covered by tests.
 
-Initial PowerShell/PTY reset attempts stalled before useful reset output and were cancelled. The bounded reset had recreated the local database container but did not finish setup. The database was explicitly started afterward; Docker acknowledged it, and logs show a new PostgreSQL cluster initializing. The local database is therefore in a partial-reset state, not the previously verified Phase 1 database. A complete clean reset must be rerun before using the backend. The final bounded reset attempt timed out, as recorded in the table above. No successful clean reset or new-migration lint result is claimed. The original Phase 1 `private.payment_transaction_hash` unused-parameter warning was previously reviewed; any new warnings still require investigation.
-
-After memory/WSL runtime recovery: run a clean reset, all database tests
-(original 406 plus 99 new API assertions), lint, serve `api` locally, and run
-the real HTTP suite. If the Edge Runtime image is still missing, obtain explicit
-approval before downloading it. Fix every migration or integration failure
-before calling Phase 2 complete. `backend/README.md` documents commands, route
-coverage, contract decisions and deferred work.
+The only lint warning is inherited from Phase 1: the payment hash helper keeps
+its `method` parameter in the function signature for future provider-specific
+normalization, while the current canonical hash intentionally does not use it.
+There are no unexplained warnings.
 
 ---
 

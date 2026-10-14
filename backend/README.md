@@ -38,7 +38,7 @@ npm run test:api:unit
 npm run test:api:http
 ```
 
-The HTTP suite reads local CLI status JSON into memory, refuses hosted URLs, creates temporary synthetic `.invalid` Auth accounts through the local admin API, obtains real Auth sessions, and deletes those accounts in `finally`. Passwords and keys exist only in process memory. This is test setup, not an application password-login endpoint. Database tests use synthetic fixtures inside rollback transactions. Unit tests use built-in Node test modules and mocks; HTTP tests call the real local Edge Function.
+The HTTP suite reads local CLI status JSON into memory, refuses hosted URLs, creates temporary synthetic `.invalid` Auth accounts through the local admin API, obtains real Auth sessions, and deletes those accounts in `finally`. Passwords and keys exist only in process memory. This is test setup, not an application password-login endpoint. Database tests use synthetic fixtures inside rollback transactions. Unit tests use built-in Node test modules and mocks; HTTP tests call the real local Edge Function. The CLI-generated Kong proxy installs a wildcard CORS plugin, so the suite probes only preflight behavior directly over the existing Docker network; all other HTTP tests use the documented public local URL.
 
 ## Routes
 
@@ -57,6 +57,8 @@ The HTTP suite reads local CLI status JSON into memory, refuses hosted URLs, cre
 Protected requests require a Supabase Auth user bearer token and publishable `apikey`. Candidate reads use a separate user-scoped REST client and existing RLS. A separate service client performs narrow RPC mutations using only the Auth-verified user UUID. Public SQL RPCs used by this service have no anonymous/authenticated execution grants. `qiyadat_history` has no actor argument and executes as the authenticated user with RLS. Editable user metadata never grants admin membership; future admin checks read `admin_users` through a trusted context.
 
 Mutations strictly reject unknown properties. Errors and logs expose safe codes and field validation messages, never SQL diagnostics or request content. CORS never reflects arbitrary origins. Authenticated responses use `private, no-store`. Idempotency stores canonical JSON hashes and exact response status/body for at least 24 hours; the table is service-only. Profile locking serializes simultaneous requests per account. Rate counters are in a private, forced-RLS table.
+
+Public WAT configuration responses use a short cache and content-derived ETag. Conditional requests accept both strong and gateway-weakened ETag forms, because the local gateway may add `W/` when compressing the response.
 
 ## Migrations and seed
 

@@ -14,6 +14,16 @@ function localKeys(){
  return {anon:config.ANON_KEY as string,service:config.SERVICE_ROLE_KEY as string};
 }
 interface Actor {id:string;token:string}
+function directPreflight(origin:string,method:string,requestHeaders=''){
+ const request=['OPTIONS /api/v1/me HTTP/1.1','Host: edge_runtime','Origin: '+origin,
+  'Access-Control-Request-Method: '+method,...(requestHeaders?['Access-Control-Request-Headers: '+requestHeaders]:[]),'Connection: close','',''].join('\r\n');
+ const script=`(printf '%s' '${request}'; sleep 2) | nc -w 10 edge_runtime 8081`;
+ const raw=execFileSync('docker',['exec','supabase_kong_qiyadat-local','sh','-c',script],{encoding:'utf8',timeout:15000});
+ const [head,body='']=raw.split(/\r?\n\r?\n/,2),lines=head.split(/\r?\n/),match=/^HTTP\/\d(?:\.\d)?\s+(\d{3})/.exec(lines.shift()!);
+ assert.ok(match,'Direct Edge Runtime returned an HTTP response');const headers=new Headers();
+ for(const line of lines){const colon=line.indexOf(':');if(colon>0)headers.append(line.slice(0,colon).trim(),line.slice(colon+1).trim());}
+ return {status:Number(match[1]),body:body?JSON.parse(body):null,headers};
+}
 test('real local Edge Function authenticated lifecycle',async t=>{
  const keys=localKeys(),created:string[]=[];
  async function raw(path:string,options:RequestInit={}){return fetch(base+path,{...options,signal:AbortSignal.timeout(20000)});}
@@ -45,8 +55,10 @@ test('real local Edge Function authenticated lifecycle',async t=>{
    status(await call('/me'),401,'AUTH_REQUIRED');status(await call('/me',{headers:{Authorization:'Bearer invalid'}}),401,'AUTH_INVALID');status(await call('/me',{headers:{Authorization:'Bearer '+keys.anon}}),401,'AUTH_INVALID');
   });
   await t.test('CORS is allowlisted and preflight validates required headers',async()=>{
-   const preflight=await call('/me',{method:'OPTIONS',headers:{Origin:'http://127.0.0.1:8080','Access-Control-Request-Method':'PATCH','Access-Control-Request-Headers':'authorization,apikey,content-type,x-request-id'}});status(preflight,204);assert.equal(preflight.headers.get('Access-Control-Allow-Origin'),'http://127.0.0.1:8080');
-   const bad=await call('/me',{method:'OPTIONS',headers:{Origin:'https://untrusted.example.invalid','Access-Control-Request-Method':'GET'}});status(bad,403,'FORBIDDEN');assert.equal(bad.headers.get('Access-Control-Allow-Origin'),null);
+   // The local CLI's Kong route installs a wildcard CORS plugin, so probe the served
+   // function directly over Docker's existing network to verify our own allowlist.
+   const preflight=directPreflight('http://127.0.0.1:8080','PATCH','authorization,apikey,content-type,x-request-id');status(preflight,204);assert.equal(preflight.headers.get('Access-Control-Allow-Origin'),'http://127.0.0.1:8080');
+   const bad=directPreflight('https://untrusted.example.invalid','GET');status(bad,403,'FORBIDDEN');assert.equal(bad.headers.get('Access-Control-Allow-Origin'),null);
   });
   a=await identity();b=await identity();c=await identity();
   await t.test('Auth creates candidate account and GET me uses canonical private response',async()=>{

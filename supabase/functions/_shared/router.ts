@@ -4,7 +4,7 @@ import {authenticate} from './auth.ts';
 import {accountObject,refreshedAccount} from './accounts.ts';
 import {sessionDetail,history} from './sessions.ts';
 import {Cursors} from './cursor.ts';
-import {cors,failure,json,parseJson,preflight,requestId} from './http.ts';
+import {cors,etagMatches,failure,json,parseJson,preflight,requestId} from './http.ts';
 import {idempotencyKey,sha256,canonicalJson} from './idempotency.ts';
 import {queryParameters,validateBody,uuid,integer} from './validation.ts';
 import {safeLog} from './logging.ts';
@@ -50,7 +50,7 @@ export function createApp(env:Environment,options:{fetcher?:typeof fetch;sink?:(
      }
      const body={data};headers.set('ETag','"'+await sha256(canonicalJson(body))+'"');
      response=json(body,200,id,headers,true);
-     if(request.headers.get('if-none-match')===headers.get('etag')) response=new Response(null,{status:304,headers:response.headers});
+     if(etagMatches(request.headers.get('if-none-match'),headers.get('etag')!)) response=new Response(null,{status:304,headers:response.headers});
     } else {
      const context=await authenticate(request,env,service,options.fetcher);
      let session:string|undefined;

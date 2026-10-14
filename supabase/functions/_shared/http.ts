@@ -27,6 +27,11 @@ export function json(body:unknown,status:number,id:string,headers:Headers,public
  return new Response(JSON.stringify(body),{status,headers});
 }
 export function failure(error:ApiError,id:string,headers:Headers):Response {return json(errorEnvelope(error,id),error.status,id,headers);}
+export function etagMatches(value:string|null,current:string):boolean {
+ if(!value) return false;
+ const normalize=(tag:string)=>tag.trim().replace(/^W\//i,'');
+ return value.split(',').some(tag=>tag.trim()==='*' || normalize(tag)===normalize(current));
+}
 export async function parseJson(request:Request):Promise<Record<string,any>> {
  if(request.headers.get('content-type')?.split(';')[0].trim().toLowerCase()!=='application/json') throw new ApiError('INVALID_REQUEST');
  if(!request.body) throw new ApiError('INVALID_JSON');
