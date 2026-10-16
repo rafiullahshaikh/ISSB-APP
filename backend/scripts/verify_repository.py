@@ -49,7 +49,11 @@ api_sql = '\n'.join(p.read_text(encoding='utf-8') for p in migrations[3:])
 api_functions = re.findall(r'create function .*?\$\$;', api_sql, re.S)
 check(len(api_functions) >= 20 and all("set search_path = ''" in f for f in api_functions),
       'Every new API function has a fixed empty search path')
-check('security definer' not in api_sql.lower(), 'New API operations use invoker privileges')
+privileged_api = re.findall(r'create(?: or replace)? function .*?\$\$;', api_sql, re.S)
+check(all('security definer' not in f.lower() or
+          (f.startswith('create or replace function private.validate_session()')
+           and "set search_path = ''" in f) for f in privileged_api),
+      'New API operations use invoker privileges; existing session trigger retains its fixed definer context')
 check('revoke all on function public.qiyadat_mutate' in api_sql
       and 'from public,anon,authenticated' in api_sql
       and 'grant execute on function public.qiyadat_mutate' in api_sql,
