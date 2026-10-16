@@ -2,7 +2,7 @@
 
 The repository-root `API_SPEC.md` (currently v1.1.0) is the binding API contract. This backend uses Supabase Auth, PostgreSQL, forced Row Level Security, private Storage, and one Edge Function router. There is no FastAPI backend. Existing frontend HTML remains independent and unchanged.
 
-Phase 2 implements the authenticated API foundation and typed WAT lifecycle. See `VERIFICATION.md` for actual verification results; implementation alone is not a completion claim. Historical Phase 1 setup notes are in `PHASE1_NOTES.md`.
+Phases 1 and 2 implement the authenticated API foundation and typed WAT lifecycle. Phase 3 adds durable feedback jobs and reports; see `VERIFICATION.md` for actual verification status and `PHASE3_NOTES.md` for contract decisions. Historical Phase 1 setup notes are in `PHASE1_NOTES.md`.
 
 ## Local prerequisites
 
@@ -36,6 +36,10 @@ node backend/scripts/verify_frontend.cjs
 npm run test:api:unit
 # With local Auth/PostgREST/database and functions serve running:
 npm run test:api:http
+npm run test:feedback:unit
+npm run test:feedback:worker
+# Starts isolated synthetic Gemini mock and local worker automatically:
+npm run test:feedback:http
 ```
 
 The HTTP suite reads local CLI status JSON into memory, refuses hosted URLs, creates temporary synthetic `.invalid` Auth accounts through the local admin API, obtains real Auth sessions, and deletes those accounts in `finally`. Passwords and keys exist only in process memory. This is test setup, not an application password-login endpoint. Database tests use synthetic fixtures inside rollback transactions. Unit tests use built-in Node test modules and mocks; HTTP tests call the real local Edge Function. The CLI-generated Kong proxy installs a wildcard CORS plugin, so the suite probes only preflight behavior directly over the existing Docker network; all other HTTP tests use the documented public local URL.
@@ -53,6 +57,9 @@ The HTTP suite reads local CLI status JSON into memory, refuses hosted URLs, cre
 | POST | `/wat/sessions/import` | Validated guest/legacy history import; required idempotency key |
 | GET | `/wat/sessions/{id}` | Own ordered snapshot and safe summary references |
 | GET | `/wat/sessions` | Own summary history, documented filters, signed opaque cursor |
+| POST | `/wat/sessions/{id}/report` | Transactional consent, eligibility, quota and durable job creation |
+| GET | `/wat/sessions/{id}/report` | Complete saved report with deterministic scores and disclaimer |
+| GET | `/jobs/{id}` | Owner-only safe status/result; trusted admin operational access |
 
 Protected requests require a Supabase Auth user bearer token and publishable `apikey`. Candidate reads use a separate user-scoped REST client and existing RLS. A separate service client performs narrow RPC mutations using only the Auth-verified user UUID. Public SQL RPCs used by this service have no anonymous/authenticated execution grants. `qiyadat_history` has no actor argument and executes as the authenticated user with RLS. Editable user metadata never grants admin membership; future admin checks read `admin_users` through a trusted context.
 
@@ -67,6 +74,9 @@ The three verified Phase 1 migrations remain byte-for-byte unchanged. New migrat
 1. `20261008000100_api_primitives.sql`: protected lifetime free-demo and report markers, exact idempotency replay data, private rate counters, validation/access/idempotency helpers, supporting indexes.
 2. `20261008000200_session_operations.sql`: transactional start, typed-answer, finish, import, and safe profile operations.
 3. `20261008000300_api_dispatch_and_reads.sql`: service-only dispatcher, health/config/account/admin-context functions, candidate RLS history function and explicit grants.
+4. `20261016000100_feedback_foundation.sql`: quota/cap helpers, report requests and narrowly guarded technical session recovery.
+5. `20261016000200_feedback_worker.sql`: claim, dispatch authorization, retry, stale recovery, output validation and atomic completion.
+6. `20261016000300_feedback_reads.sql`: candidate RLS report reads and safe owner/admin job reads.
 
 Seed remains exactly the original 20 `diagnostic-v1` words, with 15 seconds, 2000 ms grace, 280 code points and safe feature/quota defaults. No accounts, admins or payment offers are seeded. WAT configuration is enabled; OCR, feedback, payments and beta remain disabled.
 
@@ -79,6 +89,16 @@ Seed remains exactly the original 20 `diagnostic-v1` words, with 15 seconds, 200
 - Acceptance uses database statement receive time, never client timestamps. `client_elapsed_ms`, when supplied, remains response-time telemetry; absent simulation telemetry is derived from server receive time and capped at 15000 ms. Imported timing is always `client_reported`.
 - Natural finish before all simulation windows close reports actual completion and sets `ended_early`; future unattempted windows remain unattempted. Closed windows become blanks. No fabricated answers or future completion times are accepted.
 - Protected columns reserve trusted technical recovery on the same free session. Phase 2 exposes no recovery endpoint or worker. It never grants a fresh demo after an alleged client failure.
-- Provider-dependent OCR/report references are read-only summaries. No OCR, Gemini, report generation, payment/offer endpoints, admin screens, progress aggregation, privacy export/deletion workers, OTP delivery or frontend integration is implemented. These remain later phases.
+- OCR, paper confirmation/uploads, payment/offer endpoints, admin screens, progress aggregation, privacy export/deletion workers, OTP delivery and frontend integration remain deferred. Phase 3 implements typed feedback only; paper report requests return `SESSION_STATE_CONFLICT`.
+
+## Feedback jobs and quotas
+
+The report POST commits a quota reservation and queued job before any provider call. The isolated `feedback-worker` function claims due work using a server-only secret, rechecks current consent/kill switches, sends only quoted ordered word/answer pairs, validates structured output and persists exactly 20 items atomically. PostgreSQL derives scores from 1-5 rubric ratings; blanks produce null scores and do not affect averages. Report retrieval includes the exact practice-only disclaimer. Provider/model/prompt/rubric versions are retained; raw output, prompts and provider error bodies are not stored or logged.
+
+One free report belongs only to the canonical authenticated demo. Active beta/paid accounts receive three report slots per rolling 24 hours. Reserved and consumed slots count; terminal failures release reservations. Retries and duplicate clicks preserve the same reservation. Technical recovery reuses the failed session. New report requests require current explicit AI-processing consent; previously generated reports remain readable after withdrawal or entitlement expiry.
+
+The worker uses five-minute processing leases, stale-lock recovery and at most two attempts per job with bounded exponential retry. A server-only daily provider-attempt cap defaults to 100. Worker invocation must be scheduled by trusted infrastructure for unattended processing; no hosted scheduler is deployed in this phase. See `supabase/functions/_shared/feedback/README.md` for invocation, local mocks, recovery and optional manual real-provider smoke testing.
+
+The root/backend empty environment examples include `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_PROMPT_VERSION`, `GEMINI_REQUEST_TIMEOUT_MS` and `QIYADAT_WORKER_SECRET`. No model is silently substituted. The specification's `gemini-3.5-flash-lite` is documented by Google as supporting text, structured output and a free tier (verified 2026-10-16). Free-tier prompts/output may improve Google products, which must be disclosed in the current AI-processing consent mechanism. Automated tests use only synthetic local mocks.
 
 The workspace is connected to `https://github.com/rafiullahshaikh/ISSB-APP` on `main`. Offline checks scan source for recognizable secrets, exclude ignored local CLI state, and compare original migration, specification and HTML hashes. Review `git status` before every commit; local runtime artifacts and real environment files must remain ignored.

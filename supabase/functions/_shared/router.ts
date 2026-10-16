@@ -9,14 +9,19 @@ import {idempotencyKey,sha256,canonicalJson} from './idempotency.ts';
 import {queryParameters,validateBody,uuid,integer} from './validation.ts';
 import {safeLog} from './logging.ts';
 import type {Environment} from './env.ts';
-interface Route {name:string;methods:string[];public?:boolean;session?:string;position?:string}
+import {getJob,getReport,requestReport} from './feedback/reports.ts';
+interface Route {name:string;methods:string[];public?:boolean;session?:string;position?:string;job?:string}
 function route(path:string):Route {
  if(path==='/health') return {name:'health',methods:['GET'],public:true};
  if(path==='/config/wat') return {name:'config',methods:['GET'],public:true};
  if(path==='/me') return {name:'account',methods:['GET','PATCH']};
  if(path==='/wat/sessions') return {name:'sessions',methods:['GET','POST']};
  if(path==='/wat/sessions/import') return {name:'import',methods:['POST']};
- let match=/^\/wat\/sessions\/([^/]+)\/answers\/([^/]+)$/.exec(path);
+ let match=/^\/jobs\/([^/]+)$/.exec(path);
+ if(match) return {name:'job',methods:['GET'],job:match[1]};
+ match=/^\/wat\/sessions\/([^/]+)\/report$/.exec(path);
+ if(match) return {name:'report',methods:['GET','POST'],session:match[1]};
+ match=/^\/wat\/sessions\/([^/]+)\/answers\/([^/]+)$/.exec(path);
  if(match) return {name:'answer',methods:['PUT'],session:match[1],position:match[2]};
  match=/^\/wat\/sessions\/([^/]+)\/finish$/.exec(path);
  if(match) return {name:'finish',methods:['POST'],session:match[1]};
@@ -57,18 +62,25 @@ export function createApp(env:Environment,options:{fetcher?:typeof fetch;sink?:(
      if(found.session) {try {session=uuid(found.session);} catch {throw new ApiError('NOT_FOUND');}}
      if(request.method==='GET') {
       if(name==='sessions') response=json(await history(url,context,cursors),200,id,headers);
-      else {queryParameters(url,[]);response=json({data:name==='account'?accountObject(context):await sessionDetail(session!,context,service)},200,id,headers);}
+      else {queryParameters(url,[]);let data:any;
+       if(name==='account')data=accountObject(context);
+       else if(name==='report')data=await getReport(session!,context);
+       else if(name==='job'){let job:string;try{job=uuid(found.job);}catch{throw new ApiError('NOT_FOUND');}data=await getJob(job,context,service);}
+       else data=await sessionDetail(session!,context,service);
+       response=json({data},200,id,headers);}
      } else {
       queryParameters(url,[]);
       const operation=name==='sessions'?'start':name==='account'?'profile':name;
-      const key=['start','finish','import'].includes(operation)?idempotencyKey(request):null;
+      const key=['start','finish','import','report'].includes(operation)?idempotencyKey(request):null;
       let position:number|null=null;
       if(found.position!==undefined) {
        if(!/^\d{1,2}$/.test(found.position)) throw new ApiError('VALIDATION_ERROR',{fields:{position:'Must be 1 to 20.'}});
        position=integer(Number(found.position),'position',1,20);
       }
-      const body=validateBody(operation,await parseJson(request));
-      const result=await service.rpc('qiyadat_mutate',{p_actor:context.id,p_operation:operation,p_body:body,p_key:key,p_session_id:session??null,p_position:position});
+      const parsed=await parseJson(request);
+      const body=operation==='report'?parsed:validateBody(operation,parsed);
+      const result=operation==='report'?await requestReport(session!,body,key!,context,service):
+       await service.rpc('qiyadat_mutate',{p_actor:context.id,p_operation:operation,p_body:body,p_key:key,p_session_id:session??null,p_position:position});
       response=json(operation==='profile'?{data:await refreshedAccount(context,service)}:result.body,result.status,id,headers);
      }
     }

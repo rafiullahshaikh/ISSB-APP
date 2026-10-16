@@ -4,6 +4,11 @@
   "type": "module",
   "scripts": {
     "test:api:unit": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/api_unit_test.ts",
-    "test:api:http": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/api_http_test.ts"
+    "test:api:http": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/api_http_test.ts",
+    "test:feedback:unit": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/feedback_unit_test.ts",
+    "test:feedback:worker": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/worker_test.ts",
+    "test:feedback:http": "node --experimental-strip-types backend/scripts/run_feedback_http.ts",
+    "test:feedback:mock": "node --experimental-strip-types backend/scripts/feedback_mock_server.ts",
+    "worker:feedback": "node --experimental-strip-types backend/scripts/run_feedback_worker.ts"
   }
 }

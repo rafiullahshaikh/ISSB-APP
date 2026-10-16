@@ -4,7 +4,8 @@ export const errorStatus: Record<string, number> = {
  NOT_FOUND:404, IDEMPOTENCY_CONFLICT:409, CONFIG_VERSION_MISMATCH:409, SESSION_STATE_CONFLICT:409,
  SESSION_ALREADY_FINISHED:409, SESSION_NOT_FINISHED:409, SESSION_LATE_ANSWER:409, ANSWER_NOT_ACTIVE:409,
  ANSWER_ALREADY_LOCKED:409, SESSION_EXPIRED:410, RATE_LIMITED:429, FEATURE_DISABLED:503,
- PROVIDER_UNAVAILABLE:503, INTERNAL_ERROR:500,
+ PROVIDER_UNAVAILABLE:503, INTERNAL_ERROR:500, AI_CONSENT_REQUIRED:403, REPORT_LIMIT_REACHED:429,
+ REPORT_ALREADY_EXISTS:409, AI_OUTPUT_INVALID:502, GLOBAL_QUOTA_EXHAUSTED:503,
 };
 const messages: Record<string,string> = {
  INVALID_JSON:'The request body is not valid JSON.', INVALID_REQUEST:'The request is not supported.',
@@ -18,7 +19,10 @@ const messages: Record<string,string> = {
  ANSWER_NOT_ACTIVE:'This position has not opened yet.', SESSION_LATE_ANSWER:'This answer arrived after the permitted window.',
  ANSWER_ALREADY_LOCKED:'This answer is locked.', RATE_LIMITED:'Please wait before making another request.',
  FEATURE_DISABLED:'This feature is currently unavailable.', PROVIDER_UNAVAILABLE:'A required service is temporarily unavailable.',
- INTERNAL_ERROR:'An unexpected error occurred.',
+ INTERNAL_ERROR:'An unexpected error occurred.', SESSION_NOT_FINISHED:'Finish the session before requesting a report.',
+ AI_CONSENT_REQUIRED:'Accept the current AI-processing disclosure before requesting feedback.',
+ REPORT_LIMIT_REACHED:'The rolling report allowance has been reached.',REPORT_ALREADY_EXISTS:'A final report already exists for this session.',
+ AI_OUTPUT_INVALID:'Feedback could not be validated. Please try again.',GLOBAL_QUOTA_EXHAUSTED:'The provider safety limit has been reached. Please try later.',
 };
 export class ApiError extends Error {
  code:string; status:number; details?:{fields:Record<string,string>};

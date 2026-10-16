@@ -1,3 +1,83 @@
+# Phase 3 verification status - 2026-10-16
+
+**Phase 3 is complete locally.** A finished typed session can reserve quota,
+create a durable feedback job, run through the protected worker and local Gemini
+HTTP mock, and retrieve a complete practice report. All preserved suites and new
+feedback suites pass. No hosted project was linked or deployed and no real
+Gemini request was made.
+
+| Command/check | Assistant-observed result |
+|---|---|
+| `node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' db reset --local` | PASS, exit 0. Clean database recreation applied all nine migrations and original seed. The six Phase 1/2 migrations remain unchanged. |
+| `node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' test db` | PASS, exit 0. `Files=3, Tests=580`, all successful: 505 preserved assertions plus 75 feedback assertions. |
+| `node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' db lint --local --level warning` | PASS, exit 0. No new warnings or errors. The existing unused `method` parameter in `private.payment_transaction_hash` is the sole explained warning. |
+| `npm run test:api:unit` | PASS, exit 0. 22 tests passed, 0 failed; 2.267 seconds. |
+| `npm run test:api:http` | PASS, exit 0. All 20 preserved HTTP tests passed, 0 failed; 27.728 seconds. |
+| `npm run test:feedback:unit` | PASS, exit 0. 34 tests passed, 0 failed; 2.773 seconds. Includes mocked provider schema failures, refusal, quota, actual request abort, partial/all-blank scoring, privacy and prompt injection. |
+| `npm run test:feedback:worker` | PASS, exit 0. 6 tests passed, 0 failed. Covers claims, authorization, retries, lost completion acknowledgement, empty queues and safe logs. |
+| `npm run test:feedback:http` | PASS, exit 0. 18 tests passed, 0 failed; 17.011 seconds. Real local Auth/PostgREST/Edge API and worker plus a synthetic HTTP Gemini provider. Runtime log privacy assertion passed. |
+| `python backend/scripts/verify_repository.py` | PASS, exit 0. Includes immutable specification, all six original migrations and four HTML files, restricted grants, security matrix, seed/config, source credential scan and empty environment examples. |
+| `node backend/scripts/verify_frontend.cjs` | PASS, exit 0. Four preserved scripts parse and local links resolve. |
+| Git | Database step committed as `89d45d7` and pushed to `main`; API/worker/test/documentation step committed separately. Unrelated pre-existing deletions remain unstaged and untouched. |
+
+## Phase 3 verification coverage
+
+The new SQL suite verifies free-demo reservation, three rolling paid/beta slots,
+fourth-request rejection, atomic success/failure, duplicate jobs/reports,
+twenty persisted items, blank/null aggregates, fixed worker attempts, stale
+recovery, worker fencing, quota release, same-demo technical recovery, current
+and withdrawn consent, reacceptance, global caps, restricted function execution,
+owner RLS and safe trusted-admin job reads. HTTP tests additionally race report
+requests with identical and different keys, race paid quota reservations, verify
+job polling and exact report envelopes, and reject cross-user access. Imported
+free activity is feedback-ineligible; paid legacy typed imports generate reports.
+
+All provider inputs are projected to ordered position, word and quoted answer.
+The schema rejects extra fields, invalid positions/ratings/enums/lengths,
+unsupported flags, invented evidence and prohibited guidance. PostgreSQL derives
+persisted sentence/dimension/overall scores independently from integer ratings.
+Provider/model/prompt/rubric versions are stored; raw output, prompts, reasoning
+and provider error bodies are neither retained nor returned. Automated tests
+require no real provider key. A real-provider smoke test remains optional and
+was not run.
+
+## Phase 3 runtime notes and resolved failures
+
+Docker Desktop initially could not start its Linux engine. A normal restart
+completed; PostgreSQL then spent about seven minutes syncing its filesystem and
+performing recovery. The project's Auth/REST/Storage/metadata containers were
+temporarily stopped to reduce reconnect load, then restored. No Docker/WSL
+configuration or installed package was changed. Existing Edge Runtime v1.77.1
+was reused; no runtime was downloaded.
+
+The Node CLI launcher intermittently stalled. The installed native 2.119.0 CLI
+completed the initial reset; the final required Node reset command then passed.
+The new HTTP harness uses that same installed executable for reliable local
+status/startup and never prints captured key material. Readiness requires the
+current synthetic worker secret and healthy API configuration before testing.
+
+Verification found and fixed an insertion timestamp mismatch against the
+existing job guard. A deterministic retry fixture was corrected to prioritize
+due retries over new queued work. The HTTP fixture helper was corrected for
+empty REST insertion responses. Synthetic report children are deleted before
+Auth accounts because the existing response foreign key is intentionally
+restrictive; this is fixture cleanup, not a new account-deletion worker.
+
+The test runner restores feature settings, deletes its synthetic accounts,
+closes its mock/server processes and removes synthetic temporary environment
+files. The normal seed keeps feedback, OCR, payments and beta disabled. The
+local polling runner is available through `npm run worker:feedback`; hosted
+scheduling/deployment is deferred. The contract interpretations and versioned
+rubric vocabulary are recorded in `PHASE3_NOTES.md`; API_SPEC.md was unchanged.
+
+An initial GitHub push failed DNS resolution; the retry succeeded. The only
+database lint warning remains the Phase 1 payment hash parameter intentionally
+reserved for future provider-specific normalization. Phase 4 paper upload,
+OCR and candidate confirmation are not implemented. Payment, admin UI,
+progress, privacy workers and frontend integration remain deferred.
+
+---
+
 # Phase 2 verification status — 2026-10-14
 
 **Phase 2 is complete locally.** The authenticated API foundation and typed WAT

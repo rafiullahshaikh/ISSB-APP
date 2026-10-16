@@ -58,3 +58,8 @@ enabled = false
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/api/index.ts"
+
+[functions.feedback-worker]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/feedback-worker/index.ts"
