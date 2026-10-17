@@ -25,7 +25,7 @@ create function pg_temp.complete_pages(job uuid,worker uuid) returns void langua
   perform public.qiyadat_ocr_page_event(job,worker,u,'done','[{"text":"OCR draft","confidence":null}]');
  end loop;end$$;
 grant execute on all functions in schema pg_temp to service_role,authenticated;
-insert into auth.users(id,email) select pg_temp.actor(n),'paper-'||n||'@example.invalid' from generate_series(501,508)n;
+insert into auth.users(id,email) select pg_temp.actor(n),'paper-'||n||'@example.invalid' from generate_series(501,509)n;
 -- Isolate provider counters inside this rollback transaction; HTTP mock runs
 -- intentionally leave their global safety counts in place after user cleanup.
 delete from private.ocr_provider_windows;
@@ -44,9 +44,9 @@ select is(pg_temp.failure($q$select qiyadat_paper_prepare(pg_temp.actor(501),pg_
 update app_settings set value='true' where key='ocr_enabled';
 select pg_temp.put('typed',to_jsonb(pg_temp.session(pg_temp.actor(502),'phase4-typed',false)));
 select is(pg_temp.failure($q$select qiyadat_paper_prepare(pg_temp.actor(502),(pg_temp.get('typed')#>>'{}')::uuid,pg_temp.files(1))$q$),'SESSION_STATE_CONFLICT','Typed session rejected');
-select is(pg_temp.failure($q$select qiyadat_paper_prepare(pg_temp.actor(501),pg_temp.sid(),pg_temp.files(5))$q$),'PAPER_UPLOAD_INCOMPLETE','Five pages rejected');
-select is(pg_temp.failure($q$select qiyadat_paper_prepare(pg_temp.actor(501),pg_temp.sid(),jsonb_set(pg_temp.files(2),'{files,1,page_number}','1'))$q$),'PAPER_UPLOAD_INCOMPLETE','Duplicate page rejected');
-select is(pg_temp.failure($q$select qiyadat_paper_prepare(pg_temp.actor(501),pg_temp.sid(),jsonb_set(pg_temp.files(2),'{files,0,page_number}','2'))$q$),'PAPER_UPLOAD_INCOMPLETE','Ordering must start at one');
+select is(pg_temp.failure($q$select qiyadat_paper_prepare(pg_temp.actor(501),pg_temp.sid(),pg_temp.files(5))$q$),'VALIDATION_ERROR','Five pages rejected');
+select is(pg_temp.failure($q$select qiyadat_paper_prepare(pg_temp.actor(501),pg_temp.sid(),jsonb_set(pg_temp.files(2),'{files,1,page_number}','1'))$q$),'VALIDATION_ERROR','Duplicate page rejected');
+select is(pg_temp.failure($q$select qiyadat_paper_prepare(pg_temp.actor(501),pg_temp.sid(),jsonb_set(pg_temp.files(2),'{files,0,page_number}','2'))$q$),'VALIDATION_ERROR','Ordering must start at one');
 select is(pg_temp.failure($q$select qiyadat_paper_prepare(pg_temp.actor(501),pg_temp.sid(),pg_temp.files(1,8388609))$q$),'UPLOAD_TOO_LARGE','Per-image bound');
 select is(pg_temp.failure($q$select qiyadat_paper_prepare(pg_temp.actor(501),pg_temp.sid(),pg_temp.files(4,8388608))$q$),'UPLOAD_TOO_LARGE','Combined bound');
 select is(pg_temp.failure($q$select qiyadat_paper_prepare(pg_temp.actor(501),pg_temp.sid(),jsonb_set(pg_temp.files(1),'{files,0,content_type}','"application/pdf"'))$q$),'UNSUPPORTED_MEDIA_TYPE','PDF rejected');
@@ -210,5 +210,19 @@ select pg_temp.put('session',to_jsonb(pg_temp.session(pg_temp.actor(507),'phase4
 select is(jsonb_array_length(qiyadat_paper_prepare(pg_temp.actor(507),pg_temp.sid(),pg_temp.files(3))->'uploads'),3,'Three contiguous pages accepted');
 select pg_temp.put('session',to_jsonb(pg_temp.session(pg_temp.actor(508),'phase4-four-pages')));
 select is(jsonb_array_length(qiyadat_paper_prepare(pg_temp.actor(508),pg_temp.sid(),pg_temp.files(4,6291456))->'uploads'),4,'Four pages at exact combined 24 MiB accepted');
+select ok(not has_function_privilege('authenticated','qiyadat_paper_storage_failure(uuid,uuid,uuid)','EXECUTE'),'Browser cannot forge a Storage failure');
+select pg_temp.put('session',to_jsonb(pg_temp.session(pg_temp.actor(509),'phase4-upload-outage')));
+select qiyadat_paper_prepare(pg_temp.actor(509),pg_temp.sid(),pg_temp.files(1));
+select pg_temp.put('oldUpload',to_jsonb(pg_temp.upload()));
+select qiyadat_paper_upload_context(pg_temp.actor(509),pg_temp.sid(),pg_temp.upload(),pg_temp.actor(599));
+select ok(qiyadat_paper_upload_complete(pg_temp.actor(509),pg_temp.sid(),pg_temp.upload(),pg_temp.actor(599),false),'Server records unsuccessful Storage write');
+select is((select status::text from wat_sessions where id=pg_temp.sid()),'failed','Upload failure enters trusted technical state');
+select ok((select paper_upload_failure_verified_at is not null from wat_sessions where id=pg_temp.sid()),'Upload technical failure marker is server-owned');
+select is(qiyadat_paper_prepare(pg_temp.actor(509),pg_temp.sid(),pg_temp.files(1))->>'recovering','true','Upload recovery first cleans original object');
+select qiyadat_paper_cleanup_candidates(pg_temp.sid());select qiyadat_paper_deleted(pg_temp.upload());
+select qiyadat_paper_prepare(pg_temp.actor(509),pg_temp.sid(),pg_temp.files(1));
+select isnt(pg_temp.upload()::text,pg_temp.get('oldUpload')#>>'{}','Recovery issues a fresh upload ID');
+select is((select status::text from wat_sessions where id=pg_temp.sid()),'awaiting_upload','Upload recovery restores the same session');
+select is((select count(*)::integer from wat_sessions where user_id=pg_temp.actor(509) and is_free_demo),1,'Storage outage cannot grant another free demo');
 select * from finish();
 rollback;
