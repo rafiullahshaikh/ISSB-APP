@@ -1,9 +1,9 @@
 # Qiyadat Backend API Specification
 
-**Version:** 1.1.0  
+**Version:** 1.1.1  
 **API version:** `v1`  
 **Status:** Source of truth for the WAT MVP  
-**Last updated:** 2026-10-06
+**Last updated:** 2026-10-17
 
 This document defines the public contract between the Qiyadat frontend and the
 Supabase-first backend. Database migrations, Row Level Security (RLS) policies,
@@ -62,8 +62,9 @@ Only `GET /health`, `GET /config/wat`, and `GET /payment-offers` are public.
 ### 1.3 Content types
 
 - Requests and responses use `application/json; charset=utf-8`.
-- Photo bytes are uploaded directly to the signed Supabase Storage URL returned
-  by the paper-upload preparation endpoint.
+- Photo bytes use the protected backend upload relay URL returned by paper-upload
+  preparation. This explicit Phase 4 change was approved on 2026-10-17 because
+  standard Supabase signed-upload tokens last two hours and bypass upload RLS.
 - Dates use RFC 3339 UTC strings, for example `2026-10-02T09:30:00Z`.
 - IDs are UUID strings unless explicitly documented otherwise.
 - JSON properties use `snake_case`.
@@ -259,7 +260,7 @@ returned by `/config/wat`, but must not treat local constants as authoritative.
 | `PAPER_MAX_IMAGE_BYTES` | `8388608` | 8 MiB per re-encoded image |
 | `PAPER_MAX_TOTAL_BYTES` | `25165824` | 24 MiB per session |
 | `PAPER_ALLOWED_MIME_TYPES` | `image/jpeg`, `image/png`, `image/webp` | Server verifies magic bytes |
-| `SIGNED_UPLOAD_TTL_SECONDS` | `900` | Upload URL validity |
+| `SIGNED_UPLOAD_TTL_SECONDS` | `900` | Protected upload capability validity |
 | `UNCONFIRMED_UPLOAD_TTL_HOURS` | `24` | Abandoned-image deletion deadline |
 | `REPORTS_PER_ROLLING_WINDOW` | `3` | Beta/paid account report limit |
 | `REPORT_WINDOW_HOURS` | `24` | Rolling window, not calendar day |
@@ -974,7 +975,7 @@ readable after the free demo is used or paid access expires.
         "upload_id": "c68d66a9-0ecf-43ba-9e6a-6f6c32f447ea",
         "page_number": 1,
         "method": "PUT",
-        "upload_url": "https://<project-ref>.supabase.co/storage/v1/upload/resumable/...",
+        "upload_url": "https://<project-ref>.supabase.co/functions/v1/api/v1/wat/sessions/<session-id>/paper/uploads/<upload-id>/content?token=<upload-capability>",
         "required_headers": {
           "content-type": "image/jpeg"
         },
@@ -1000,6 +1001,25 @@ readable after the free demo is used or paid access expires.
   magic bytes, and checksum before OCR.
 - The bucket is private. Upload authorization does not grant read access.
 - URLs expire after 15 minutes. Unconfirmed objects expire after 24 hours.
+
+#### Protected binary upload relay
+
+`PUT /wat/sessions/{session_id}/paper/uploads/{upload_id}/content?token=<upload-capability>`
+
+Caller: authenticated owner, with the same bearer/apikey headers as other
+protected routes and the returned content type. Body: raw image bytes, not JSON.
+Success: `204 No Content`. The opaque capability binds the authenticated owner,
+session, upload and server expiry; it contains no user JWT or Storage credential.
+The backend rejects inactive or expired authorizations, checks actual byte count,
+format and SHA-256, and writes to the fixed private path using its isolated
+server client. The candidate receives no Storage read/list/update permission.
+Concurrent attempts cannot overwrite an accepted object. Replaying an already
+accepted identical upload may return 204 while the session awaits upload and
+authorization remains active. After OCR starts or confirmation/deletion, upload
+replays are rejected. A write that crosses expiry is rejected and cleaned up.
+The relay and all capability URLs must never be logged. Errors use the shared
+envelope and existing authentication, ownership, expiry, validation, media,
+size, state, feature and dependency error codes. This is not a public endpoint.
 
 ---
 

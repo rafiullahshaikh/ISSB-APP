@@ -1,3 +1,47 @@
+# Phase 4 prerequisite status - 2026-10-17
+
+**Phase 4 is in progress, not complete.** The user approved a protected upload
+relay after the expiry investigation. API_SPEC.md v1.1.1 records the authorized
+contract change before implementation. See `PHASE4_NOTES.md`.
+
+`node --experimental-strip-types backend/scripts/probe_upload_expiry.ts`
+passed with exit 0. The local characterization verified the standard token's
+7200-second lifetime, its bypass of an inactive authorization row, the preserved
+S3 owner-upload RLS denial, and private read denial. These are blocker findings,
+not passing Phase 4 upload/OCR tests. No real provider was called.
+
+Final inspection found zero probe Auth accounts, zero paper upload rows and
+zero paper Storage objects; OCR/feedback/payments/beta remained disabled.
+No migration, API route, worker, Storage policy, Docker/WSL configuration or
+hosted configuration was changed. The full clean-reset/HTTP matrix below is
+prior Phase 3 evidence and has not been rerun for Phase 4 completion.
+Unrelated pre-existing Git deletions remain untouched and unstaged.
+
+Additional preservation checks in this investigation:
+
+| Command/check | Observed result |
+|---|---|
+| Installed CLI `test db` | Exit 0, `Files=3, Tests=580`, all successful. |
+| Direct Node test runner for `api_unit_test.ts`, `feedback_unit_test.ts`, `worker_test.ts` | Exit 0, 62 passed, 0 failed, 0 skipped. Corresponds to 22 API + 34 feedback + 6 worker tests. |
+| `python backend/scripts/verify_repository.py` | Exit 0, all offline checks passed. |
+| `node backend/scripts/verify_frontend.cjs` | Exit 0, four preserved scripts parse and local links resolve. |
+| Installed CLI `db lint --local --level warning` | Exit 0 but emits stock `extensions` pgTAP diagnostics plus the known application warning; not a clean whole-database lint result. |
+| Installed CLI `db lint --local --schema public --schema private --level warning` | Exit 0. Only `private.payment_transaction_hash` has its previously documented unused `method` parameter warning. |
+| `git diff --name-only -- supabase API_SPEC.md index.html wat-practice.html wat-results.html wat-dashboard.html .env.example backend/.env.example` | Empty: no runtime/schema/spec/frontend/environment-example changes. |
+
+The default lint's stock pgTAP diagnostics include missing test-session temporary
+relations/sequences, legacy PostgreSQL compatibility branches and type/dynamic
+SQL warnings inside extension functions. They are not application functions and
+were not patched. The explicitly scoped application lint isolates the existing
+warning. Three npm launcher processes stalled without test output and were
+stopped; the identical underlying Node test files then passed directly using
+`node --experimental-strip-types --test-isolation=none --test` followed by the
+three file paths. No npm install or package update was performed. Clean reset
+and HTTP regression reruns remain unperformed in this blocked prerequisite
+investigation; Phase 4 OCR/worker/cleanup suites do not yet exist.
+
+---
+
 # Phase 3 verification status - 2026-10-16
 
 **Phase 3 is complete locally.** A finished typed session can reserve quota,

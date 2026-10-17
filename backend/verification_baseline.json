@@ -1,5 +1,5 @@
 {
-  "API_SPEC.md": "11a63c8fd20ae2f51b504dcfa929a0d3d654dc7c8c5215d6c5e48bba28d90cf2",
+  "API_SPEC.md": "2a38400ac5522213624784fd323a4c1f0aee40cafb04521d4bbe984aefccb50d",
   "supabase/migrations/20261002000100_database_foundation.sql": "bec7e65964ece7395604bb01d9c79899e2e4cd3f60cd61cc19b521dcc5daa68d",
   "supabase/migrations/20261002000200_integrity_and_auth.sql": "3d77959bdb75d68a8966a2c7a9e99b3293780f275564d79202d60e613d107d1e",
   "supabase/migrations/20261002000300_rls_and_storage.sql": "0891b4569fb94a1a7113a1a5272fd880e6c1e82c56425696128ba06fa4d52f01",

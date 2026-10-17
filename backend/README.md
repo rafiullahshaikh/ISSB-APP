@@ -1,5 +1,12 @@
 # Qiyadat Supabase backend
 
+Phase 4 is in progress, not complete. Its upload-expiry prerequisite was resolved
+by explicit user approval for a protected backend upload relay.
+The standard signed-upload transport lasts two hours and bypasses insertion
+RLS after issuance. See `PHASE4_NOTES.md` for the reproduced findings, S3
+limitations and the approved API_SPEC.md v1.1.1 contract decision. No Phase 4 endpoint
+or worker is enabled.
+
 The repository-root `API_SPEC.md` (currently v1.1.0) is the binding API contract. This backend uses Supabase Auth, PostgreSQL, forced Row Level Security, private Storage, and one Edge Function router. There is no FastAPI backend. Existing frontend HTML remains independent and unchanged.
 
 Phases 1 and 2 implement the authenticated API foundation and typed WAT lifecycle. Phase 3 adds durable feedback jobs and reports; see `VERIFICATION.md` for actual verification status and `PHASE3_NOTES.md` for contract decisions. Historical Phase 1 setup notes are in `PHASE1_NOTES.md`.
