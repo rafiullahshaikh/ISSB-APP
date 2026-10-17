@@ -5,5 +5,8 @@
   "supabase/migrations/20261002000300_rls_and_storage.sql": "0891b4569fb94a1a7113a1a5272fd880e6c1e82c56425696128ba06fa4d52f01",
   "supabase/migrations/20261008000100_api_primitives.sql": "eba7f0f399ce1aab35fced395c800fa03dfb07129465889528b8f1c6c28520ff",
   "supabase/migrations/20261008000200_session_operations.sql": "d8f2a90197aca442d14c513cc2a365fd956d0899bc302ddadd13a1fbceb00a9b",
-  "supabase/migrations/20261008000300_api_dispatch_and_reads.sql": "9b2c57482c36cbfca3bf86510548ec2e4182af966f4f85c044cdf46dbbf84e1e"
+  "supabase/migrations/20261008000300_api_dispatch_and_reads.sql": "9b2c57482c36cbfca3bf86510548ec2e4182af966f4f85c044cdf46dbbf84e1e",
+  "supabase/migrations/20261016000100_feedback_foundation.sql": "2299bbb2567b7d9028dd66c26697ca580fdfd1a47e579b70b4a578d0ac16313b",
+  "supabase/migrations/20261016000200_feedback_worker.sql": "918a8524e0f69a3acd5abdde5047e27a04ebe5d512c337c33bf8fb48eb0e911f",
+  "supabase/migrations/20261016000300_feedback_reads.sql": "d38d3d598e0bfed72dc1827c9755dba2a272f6bf399bf833b5ade7c6f556113f"
 }

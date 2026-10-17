@@ -3,8 +3,10 @@
 Phase 4 is **in progress, not complete**. The brief explicitly requires
 resolving upload authorization expiry before implementing uploads, and stopping
 before changing the binding contract if the supported mechanism cannot meet it.
-No migration, API route, provider adapter, worker, Storage policy, feature flag,
-frontend file or hosted configuration was changed during this investigation.
+At the initial investigation checkpoint no migration, API route, provider
+adapter, worker, Storage policy, feature flag, frontend file or hosted
+configuration had been changed. Implementation is now present and undergoing
+the full acceptance matrix; see the paper worker README and VERIFICATION.md.
 
 ## Observed incompatibility
 
@@ -94,13 +96,41 @@ RLS denial. Final database inspection found zero investigation accounts, zero
 paper upload rows and zero paper Storage objects. OCR, feedback, payments and
 beta flags were all false.
 
-All Phase 4 OCR/confirmation/cleanup/report integration work remains pending.
+The following preservation results describe the initial investigation checkpoint.
 No Vision or Gemini request was made. Preservation reruns passed 580 database
 assertions, 62 existing unit/worker tests and both offline repository/frontend
 checks. Application-only lint has just the known Phase 1 warning. Default lint
 also reports stock pgTAP extension diagnostics; see VERIFICATION.md. Clean reset
 and HTTP suites were not rerun. The previous Phase 3 verification remains
 historical evidence, not a fresh claim that all suites passed in this phase.
+
+## Implementation decisions
+
+- New authorizations use only protected relay URLs, never Storage transport
+  tokens. A new restrictive policy blocks direct candidate writes to new paths;
+  original legacy-path policies and all nine verified migrations are unchanged.
+- Existing SECURITY DEFINER session guard behavior is retained, with narrow
+  trusted same-session OCR rerun/recovery edges. A failed unconfirmed OCR session
+  can prepare replacement images only after deletion of the previous images;
+  this implements Section 12.1 recovery without another lifetime demo.
+- Logical page reservations are distinct from the persistent physical dispatch
+  safety ledger. Retries do not double-consume the same usage reservation, but
+  every actual attempt counts toward the absolute 900-page monthly safety cap.
+  Lost dispatch acknowledgements are fenced by job attempt and do not recount.
+- Never-dispatched failures release reserved quota. A dispatched request with
+  unknown outcome is conservatively retained; OAuth preflight happens before
+  dispatch. No report quota is used by OCR.
+- Raw Vision payload/hierarchy is never persisted. Partial-job page checkpoints
+  retain only bounded text/confidence until completion/expiry. Success retains
+  only 20 review entries; confirmation removes all transient OCR text.
+- Mapping cannot infer an omitted unnumbered position reliably. Such sequential
+  mapping is explicitly flagged for review; numbered gaps never shift. Extra or
+  ambiguous lines are retained or fail the bounded draft, never truncated.
+- Normal seed flags remain disabled. The local polling runner is supplied, not
+  a hosted scheduler. Physical purging depends on trusted cleanup invocation;
+  API expiry is independently enforced. Vendor request logs require a separate
+  hosted infrastructure access/redaction/retention review, not application
+  logging of image paths or tokens.
 
 ## Primary sources
 

@@ -1,4 +1,34 @@
-# Phase 4 prerequisite status - 2026-10-17
+# Phase 4 implementation status - 2026-10-17
+
+**Implementation is in final verification, not yet declared complete.** The
+approved relay, OCR jobs, confirmation, cleanup and paper report integration are
+implemented. Current observed checks:
+
+| Check | Observed result |
+|---|---|
+| Clean local database reset | PASS, exit 0, all twelve migrations and original seed apply. |
+| Full database suite | PASS, exit 0, `Files=4, Tests=686`: all 580 existing assertions plus 106 Phase 4 assertions. |
+| Required full database lint | Exit 0, only the known Phase 1 unused `method` parameter warning; no new warnings/errors. |
+| Explicit public/private application lint | Same single explained warning, exit 0. |
+| Preserved API / feedback / feedback-worker units | Package commands pass 22 / 34 / 6 tests, respectively, 0 failures. |
+| New OCR / image / provider / worker / cleanup units | 57 passed, 0 failures in the combined runner. Individual package reruns are in progress. |
+| Initial complete paper HTTP run | 25 passed, 0 failures, including live local Storage outage/retry and log privacy checks. Expanded four-page/Unicode/orphan rerun is pending. |
+| Preserved API/feedback HTTP suites | Final reruns pending. |
+
+The first two JSONB initialization lint warnings were corrected with explicit
+casts. An orphan-query alias was disambiguated. SQL counter fixtures now isolate
+their provider ledger inside rollback, so they also pass after mocked HTTP
+requests have safely left their dispatch counts in place. Earlier broad warm-state
+lint included stock pgTAP checks; the final required lint after clean reset does
+not report those diagnostics. No original migration or extension was patched.
+
+The approved contract checkpoint is `c686b50`, pushed to GitHub. All unrelated
+pre-existing deletions remain unstaged. No real provider, hosted link/deploy,
+package installation or Docker/WSL configuration change was performed.
+
+---
+
+# Phase 4 prerequisite investigation - historical checkpoint
 
 **Phase 4 is in progress, not complete.** The user approved a protected upload
 relay after the expiry investigation. API_SPEC.md v1.1.1 records the authorized
