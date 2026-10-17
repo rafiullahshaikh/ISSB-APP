@@ -123,7 +123,15 @@ check(all(not line.strip() or line.startswith('#') or re.fullmatch(r'[A-Z_]+=', 
       '.env.example has variable names with empty values only')
 check(not any(p.name.startswith('.env') and p.name != '.env.example' for p in ROOT.rglob('*') if p.is_file()),
       'No actual environment files in repository')
-secret_patterns = [r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----',
+# Require key material, not a parser's quoted PEM header constant. Cover both
+# real line breaks and escaped JSON line breaks without exempting source files.
+private_key_pattern = r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----(?:(?:\s|\\r|\\n)*[A-Za-z0-9+/=]){64,}'
+header = '-----BEGIN ' + 'PRIVATE KEY-----'
+check(bool(re.search(private_key_pattern, header + '\n' + 'A' * 64))
+      and bool(re.search(private_key_pattern, header + r'\n' + 'A' * 64))
+      and not re.search(private_key_pattern, "startsWith('" + header + "')"),
+      'Credential scan detects raw/JSON PEM material without flagging header parsers')
+secret_patterns = [private_key_pattern,
                    r'AIza[0-9A-Za-z_-]{35}', r'gh[pousr]_[A-Za-z0-9]{30,}',
                    r'sb_secret_[A-Za-z0-9_-]{15,}',
                    r'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}']

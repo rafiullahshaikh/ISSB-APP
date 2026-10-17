@@ -3,6 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:ocr:unit": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/paper_unit_test.ts",
+    "test:ocr:worker": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/paper_worker_test.ts",
+    "test:paper:storage": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/paper_storage_test.ts",
+    "test:vision:mock": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/vision_test.ts",
+    "test:paper:cleanup": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/paper_cleanup_test.ts",
+    "test:ocr:http": "node --experimental-strip-types backend/scripts/run_paper_http.ts",
+    "worker:paper": "node --experimental-strip-types backend/scripts/run_paper_worker.ts",
     "test:api:unit": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/api_unit_test.ts",
     "test:api:http": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/api_http_test.ts",
     "test:feedback:unit": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/feedback_unit_test.ts",

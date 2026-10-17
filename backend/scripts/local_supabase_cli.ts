@@ -7,7 +7,7 @@ export const localCli=join(process.env.USERPROFILE!,'node_modules','@supabase','
 export function localStatus(){
  if(process.platform!=='win32'||!existsSync(localCli))throw new Error('The installed local Windows Supabase CLI is unavailable.');
  let status:any;
- try{status=JSON.parse(execFileSync(localCli,['status','-o','json'],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:60000}));}
+ try{status=JSON.parse(execFileSync(process.execPath,[join(process.env.USERPROFILE!,'node_modules','supabase','dist','supabase.js'),'status','-o','json'],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:60000}));}
  catch{throw new Error('Local Supabase status is unavailable. Start the local stack first.');}
  if(status.API_URL!=='http://127.0.0.1:55321'||!status.ANON_KEY||!status.SERVICE_ROLE_KEY)throw new Error('Only the Qiyadat local stack is allowed.');
  return status;

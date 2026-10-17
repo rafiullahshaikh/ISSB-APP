@@ -1,4 +1,4 @@
-export interface Environment {url:string; publishableKey:string; serviceKey:string; origins:Set<string>; release:string}
+export interface Environment {url:string; publishableKey:string; serviceKey:string; origins:Set<string>; release:string;publicApiUrl?:string}
 export function readEnvironment(get:(name:string)=>string|undefined = name => {
  const globals=globalThis as any; return globals.Deno?.env.get(name) ?? globals.process?.env[name];
 }):Environment {
@@ -12,5 +12,8 @@ export function readEnvironment(get:(name:string)=>string|undefined = name => {
  for(const origin of origins) {const value=new URL(origin); if(value.origin!==origin || !['http:','https:'].includes(value.protocol)) throw new Error('Invalid CORS configuration.');}
  const release=get('QIYADAT_RELEASE') || '2026.10.0';
  if(!/^[a-zA-Z0-9._-]{1,40}$/.test(release)) throw new Error('Invalid release configuration.');
- return {url:parsed.origin,publishableKey,serviceKey,origins,release};
+ const publicApiUrl=get('QIYADAT_PUBLIC_API_URL');
+ if(publicApiUrl){const api=new URL(publicApiUrl);if(api.username||api.password||api.search||api.hash||api.pathname!=='/functions/v1/api/v1'||
+  (api.protocol!=='https:'&&!(api.protocol==='http:'&&['localhost','127.0.0.1'].includes(api.hostname))))throw new Error('Invalid public API URL.');}
+ return {url:parsed.origin,publishableKey,serviceKey,origins,release,...(publicApiUrl?{publicApiUrl}:{})};
 }

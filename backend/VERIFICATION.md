@@ -1,19 +1,40 @@
-# Phase 4 implementation status - 2026-10-17
+# Phase 4 verification status - 2026-10-17
 
-**Implementation is in final verification, not yet declared complete.** The
-approved relay, OCR jobs, confirmation, cleanup and paper report integration are
-implemented. Current observed checks:
+**Phase 4 is complete locally.** The approved protected upload relay, durable
+Vision OCR, explicit candidate confirmation, image cleanup and existing paper
+report integration pass the full acceptance matrix. Automated providers are
+synthetic local mocks; no real Vision or Gemini request was made.
 
 | Check | Observed result |
 |---|---|
-| Clean local database reset | PASS, exit 0, all twelve migrations and original seed apply. |
-| Full database suite | PASS, exit 0, `Files=4, Tests=686`: all 580 existing assertions plus 106 Phase 4 assertions. |
-| Required full database lint | Exit 0, only the known Phase 1 unused `method` parameter warning; no new warnings/errors. |
-| Explicit public/private application lint | Same single explained warning, exit 0. |
-| Preserved API / feedback / feedback-worker units | Package commands pass 22 / 34 / 6 tests, respectively, 0 failures. |
-| New OCR / image / provider / worker / cleanup units | 57 passed, 0 failures in the combined runner. Individual package reruns are in progress. |
-| Initial complete paper HTTP run | 25 passed, 0 failures, including live local Storage outage/retry and log privacy checks. Expanded four-page/Unicode/orphan rerun is pending. |
-| Preserved API/feedback HTTP suites | Final reruns pending. |
+| `node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' db reset --local` | PASS, exit 0, all fourteen migrations and original seed apply. The nine Phase 1-3 migrations remain byte-for-byte unchanged. |
+| `node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' test db` | PASS, exit 0, `Files=4, Tests=694`: all 580 existing assertions plus 114 Phase 4 assertions. |
+| `node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' db lint --local --level warning` | Exit 0, only the known Phase 1 unused `method` parameter warning; no new warnings/errors, including no extension diagnostics after clean reset. |
+| `npm.cmd run test:api:unit` / `test:feedback:unit` / `test:feedback:worker` | PASS, 22 / 34 / 6 tests, respectively, 0 failures. |
+| `npm.cmd run test:ocr:unit` / `test:ocr:worker` | PASS, 17 / 10 tests, respectively, 0 failures. |
+| `npm.cmd run test:paper:storage` / `test:vision:mock` / `test:paper:cleanup` | PASS, 13 / 14 / 5 tests, respectively, 0 failures. |
+| Final combined Node unit runner below | PASS, exit 0, 121 tests (62 preserved + 59 new), 0 failed/skipped; 3.900 seconds. |
+| `npm.cmd run test:ocr:http` | PASS, exit 0, 31 tests, 0 failed/skipped; 90.390 seconds. Runtime log privacy check PASS. |
+| `npm.cmd run test:feedback:http` | PASS, exit 0, 18 preserved tests, 0 failed/skipped; 16.745 seconds. Runtime log privacy check PASS. |
+| `npm.cmd run test:api:http` | PASS, exit 0, 20 preserved tests, 0 failed/skipped; 21.775 seconds. |
+| `python backend/scripts/verify_repository.py` | PASS, exit 0, including nine original migration hashes, approved specification baseline and credential scan self-tests. |
+| `node backend/scripts/verify_frontend.cjs` | PASS, exit 0, four original inline scripts parse and local links resolve. Original root HTML hashes unchanged. |
+| Final local fixture inspection | Zero synthetic Phase 2-4 accounts, paper upload rows and paper Storage objects. OCR, feedback, payments and beta flags all false. No hosted project-ref file. |
+
+Final combined unit command (run from the repository root):
+
+```powershell
+node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/api_unit_test.ts supabase/functions/tests/feedback_unit_test.ts supabase/functions/tests/worker_test.ts supabase/functions/tests/paper_unit_test.ts supabase/functions/tests/paper_worker_test.ts supabase/functions/tests/paper_storage_test.ts supabase/functions/tests/vision_test.ts supabase/functions/tests/paper_cleanup_test.ts
+```
+
+HTTP coverage includes all four pages, real local Auth/RLS/private Storage,
+concurrent idempotent requests, upload/confirmation Storage outages, trusted
+same-demo recovery, three OCR attempts, stale workers/revisions, 280/281 Unicode
+boundaries, exact orphan cleanup, 24-hour abandonment, canonical confirmed-text
+report input and deletion retry. Application runtime logs were checked in memory
+for image/base64, OCR, confirmed answers, capability URLs, private paths and
+credential sentinels; none appeared. Vendor gateway/Storage access logs are
+separate infrastructure and require a hosted retention/redaction review.
 
 The first two JSONB initialization lint warnings were corrected with explicit
 casts. An orphan-query alias was disambiguated. SQL counter fixtures now isolate
@@ -22,9 +43,21 @@ requests have safely left their dispatch counts in place. Earlier broad warm-sta
 lint included stock pgTAP checks; the final required lint after clean reset does
 not report those diagnostics. No original migration or extension was patched.
 
-The approved contract checkpoint is `c686b50`, pushed to GitHub. All unrelated
-pre-existing deletions remain unstaged. No real provider, hosted link/deploy,
-package installation or Docker/WSL configuration change was performed.
+The approved contract checkpoint is `c686b50`, and the database milestone is
+`b186e38`, both pushed to GitHub. The remaining implementation and final
+verification are recorded in subsequent Phase 4 commits. All seven unrelated
+pre-existing deletions remain unstaged and uncommitted. No real provider,
+hosted link/deploy, package installation, missing-runtime download or Docker/WSL
+configuration change was performed. The Storage outage tests stopped/restarted
+only this project's existing Storage container and restored it successfully.
+
+No unresolved local blocker remains. The only contract amendment is the
+explicitly approved protected relay in API_SPEC.md v1.1.1; standard two-hour
+Storage upload tokens are not issued. Optional real-provider smoke tests were
+intentionally skipped. Frontend camera/upload UI, Urdu/PDF, payments/admin,
+progress, privacy export/account-deletion workers, hosted scheduling/deployment
+and platform-log review remain deferred. Physical expiry deletion requires the
+documented trusted cleanup runner; API access expiry does not depend on it.
 
 ---
 

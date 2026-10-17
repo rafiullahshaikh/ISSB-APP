@@ -118,6 +118,10 @@ the old images and only then restores awaiting_upload on that same session;
 it never resets the lifetime claim, word snapshot or original timestamps.
 Recovery is limited to the original unconfirmed upload lifetime and trusted
 server failure state, not ordinary abandonment or a client failure flag.
+The same recovery also covers verified relay write failures and a missing or
+corrupt private object discovered before OCR. An interrupted upload cannot
+strand the free demo: cleanup precedes new authorization, active transfers must
+settle, and no report/page quota is consumed before a valid OCR job is queued.
 
 ## Mapping, confirmation and reports
 
@@ -171,9 +175,10 @@ npm run test:ocr:http
 
 The HTTP harness starts existing local components and mock providers, uses real
 local Auth/RLS/Storage, exercises both report and OCR workers, verifies sensitive
-runtime-log sentinels, restores flags and removes fixture objects/accounts. One
-test temporarily stops only the project's Storage container to verify deletion
-fallback, and restarts it in finally. Run HTTP suites serially. The precondition
+runtime-log sentinels, restores flags and removes fixture objects/accounts. The
+outage tests temporarily stop only the project's Storage container to verify
+deletion fallback and upload recovery, and restart it in finally. Run HTTP suites
+serially. The precondition
 probe in backend/scripts/probe_upload_expiry.ts is historical characterization,
 not the production upload implementation or a Phase 4 acceptance suite.
 

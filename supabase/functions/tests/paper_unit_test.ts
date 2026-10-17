@@ -1,0 +1,25 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mapLines,validateLines} from '../_shared/paper/mapping.ts';
+import {uploadCapability,verifyCapability} from '../_shared/paper/api.ts';
+import {ApiError} from '../_shared/errors.ts';
+const line=(text:string,confidence:number|null=0.95)=>({text,confidence});
+test('numbered lines map exactly twenty positions with immutable ordering',()=>{const rows=mapLines(Array.from({length:20},(_,i)=>line(`${i+1}. Answer ${i+1}.`)));assert.equal(rows.length,20);assert.equal(rows[19].ocr_text,'Answer 20.');assert.equal(rows[0].needs_review,false);});
+for(const prefix of ['1.','1)','1 -','01.'])test('numbering supports '+prefix,()=>assert.equal(mapLines([line(prefix+' Candidate text.')])[0].ocr_text,'Candidate text.'));
+test('missing numbered positions stay blank; later responses never shift',()=>{const rows=mapLines([line('1. First'),line('3. Third')]);assert.equal(rows[1].ocr_text,'');assert.equal(rows[1].needs_review,true);assert.equal(rows[2].ocr_text,'Third');assert.equal(rows[2].needs_review,true);});
+test('leading numbered gaps are flagged',()=>assert.equal(mapLines([line('4. Fourth')])[3].needs_review,true));
+test('duplicate numbering preserves both lines and requires review',()=>{const rows=mapLines([line('1. First'),line('1. Duplicate'),line('2. Second')]);assert.equal(rows[0].ocr_text,'First\nDuplicate');assert.equal(rows[0].needs_review,true);assert.equal(rows[1].ocr_text,'Second');});
+test('only structurally indented continuation merges as a wrapped line',()=>{const rows=mapLines([line('1. A person'),line('  helps the team.'),line('2. A new answer.')]);assert.equal(rows[0].ocr_text,'A person helps the team.');assert.equal(rows[0].needs_review,false);});
+test('ambiguous unnumbered continuation is preserved and flagged',()=>{const rows=mapLines([line('1. First'),line('Maybe another answer')]);assert.ok(rows[0].ocr_text.includes('Maybe another answer'));assert.equal(rows[0].needs_review,true);});
+test('unnumbered nonempty lines map sequentially with advisory review',()=>{const rows=mapLines([line('One'),line(''),line('Two')]);assert.equal(rows[1].ocr_text,'Two');assert.ok(rows.every(row=>row.needs_review));});
+test('extra sequential and invalid-numbered lines are never discarded',()=>{const rows=mapLines(Array.from({length:22},(_,i)=>line('Line '+(i+1))));assert.ok(rows[19].ocr_text.includes('Line 22'));const numbered=mapLines([line('1. First'),line('21. Extra')]);assert.ok(numbered[0].ocr_text.includes('21. Extra'));});
+test('blank page yields twenty blank review rows',()=>assert.ok(mapLines([]).every(row=>row.ocr_text===''&&row.needs_review&&row.confidence===null)));
+test('low or unknown confidence requires review',()=>{assert.equal(mapLines([line('1. Text',0.3)])[0].needs_review,true);assert.equal(mapLines([line('1. Text',null)])[0].needs_review,true);});
+test('oversized, malformed and nonfinite OCR lines fail without echoing text',()=>{for(const rows of [[line('x',NaN)],[line('x',1.1)],[line('x'.repeat(10001))],Array(501).fill(line('x'))])assert.throws(()=>validateLines(rows),e=>e instanceof ApiError&&e.code==='OCR_FAILED');});
+test('mapping does not truncate an overflowing ambiguous response',()=>assert.throws(()=>mapLines([line('1. '+'x'.repeat(9999)),line('Extra text')]),ApiError));
+test('upload capability binds owner, session, upload and exact expiry without a user token',async()=>{
+ const secret='synthetic-service-secret',expiry='2026-10-17T12:00:00.000000Z',token=await uploadCapability(secret,'owner','session','upload',expiry);
+ assert.match(token,/^[0-9a-f]{64}$/);assert.equal(await verifyCapability(secret,'owner','session','upload',expiry,token),true);
+ for(const args of [['other','session','upload',expiry],['owner','other','upload',expiry],['owner','session','other',expiry],['owner','session','upload','other']])assert.equal(await verifyCapability(secret,...args as [string,string,string,string],token),false);
+ assert.equal(await verifyCapability(secret,'owner','session','upload',expiry,'malformed'),false);
+});

@@ -11,6 +11,7 @@
 - `sessions.ts`: candidate detail/history reads through RLS, safe reference projection.
 - `logging.ts`: explicit operational log allowlist; never pass request bodies or raw errors.
 - `feedback/`: strict report schema, prompts, output validation, scoring, Gemini adapter, report serialization, retry decisions and durable worker orchestration. See `feedback/README.md`.
+- `paper/`: owner-bound upload capabilities, bounded image/container/checksum validation, isolated private Storage, Vision OAuth/adapter, review mapping, transactional confirmation, OCR worker and cleanup. See `paper/README.md`. The v1.1.1 upload relay contract was explicitly approved after verifying standard signed-upload expiry incompatibility.
 
 SQL private helpers accept clocks only for deterministic service-context database tests. The public mutation RPC always captures database statement time. Browser roles cannot execute it. Do not expose helpers, copy caller headers into the service client, derive roles from metadata, or put secrets in function source.
 

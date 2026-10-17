@@ -6,8 +6,13 @@ export const errorStatus: Record<string, number> = {
  ANSWER_ALREADY_LOCKED:409, SESSION_EXPIRED:410, RATE_LIMITED:429, FEATURE_DISABLED:503,
  PROVIDER_UNAVAILABLE:503, INTERNAL_ERROR:500, AI_CONSENT_REQUIRED:403, REPORT_LIMIT_REACHED:429,
  REPORT_ALREADY_EXISTS:409, AI_OUTPUT_INVALID:502, GLOBAL_QUOTA_EXHAUSTED:503,
+ OCR_CONFIRMATION_STALE:409,UPLOAD_EXPIRED:410,UPLOAD_TOO_LARGE:413,UNSUPPORTED_MEDIA_TYPE:415,PAPER_UPLOAD_INCOMPLETE:422,OCR_TEXT_INCOMPLETE:422,OCR_FAILED:502,
 };
 const messages: Record<string,string> = {
+ OCR_CONFIRMATION_STALE:'The OCR draft changed. Review the current revision.',UPLOAD_EXPIRED:'This temporary upload has expired.',
+ UPLOAD_TOO_LARGE:'The image or combined upload is too large.',UNSUPPORTED_MEDIA_TYPE:'Only supported image formats are accepted.',
+ PAPER_UPLOAD_INCOMPLETE:'The required paper pages are missing, invalid or unordered.',OCR_TEXT_INCOMPLETE:'Confirm every position exactly once.',
+ OCR_FAILED:'We could not read these pages. Retake clear, well-lit photos and try again.',
  INVALID_JSON:'The request body is not valid JSON.', INVALID_REQUEST:'The request is not supported.',
  VALIDATION_ERROR:'The request could not be validated.', AUTH_REQUIRED:'A user access token is required.',
  AUTH_INVALID:'The user session is invalid or expired.', NOT_FOUND:'The resource was not found.',

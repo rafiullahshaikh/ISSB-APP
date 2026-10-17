@@ -63,3 +63,13 @@ entrypoint = "./functions/api/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/feedback-worker/index.ts"
+
+[functions.ocr-worker]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/ocr-worker/index.ts"
+
+[functions.paper-cleanup]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/paper-cleanup/index.ts"

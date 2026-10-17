@@ -4,10 +4,10 @@ Phase 4 is in progress, not complete. Its upload-expiry prerequisite was resolve
 by explicit user approval for a protected backend upload relay.
 The standard signed-upload transport lasts two hours and bypasses insertion
 RLS after issuance. See `PHASE4_NOTES.md` for the reproduced findings, S3
-limitations and the approved API_SPEC.md v1.1.1 contract decision. No Phase 4 endpoint
-or worker is enabled.
+limitations and the approved API_SPEC.md v1.1.1 contract decision. OCR remains
+disabled in normal seed defaults; no hosted function or scheduler is deployed.
 
-The repository-root `API_SPEC.md` (currently v1.1.0) is the binding API contract. This backend uses Supabase Auth, PostgreSQL, forced Row Level Security, private Storage, and one Edge Function router. There is no FastAPI backend. Existing frontend HTML remains independent and unchanged.
+The repository-root `API_SPEC.md` (currently v1.1.1) is the binding API contract. This backend uses Supabase Auth, PostgreSQL, forced Row Level Security, private Storage, and one Edge Function router. There is no FastAPI backend. Existing frontend HTML remains independent and unchanged.
 
 Phases 1 and 2 implement the authenticated API foundation and typed WAT lifecycle. Phase 3 adds durable feedback jobs and reports; see `VERIFICATION.md` for actual verification status and `PHASE3_NOTES.md` for contract decisions. Historical Phase 1 setup notes are in `PHASE1_NOTES.md`.
 
@@ -67,6 +67,10 @@ The HTTP suite reads local CLI status JSON into memory, refuses hosted URLs, cre
 | POST | `/wat/sessions/{id}/report` | Transactional consent, eligibility, quota and durable job creation |
 | GET | `/wat/sessions/{id}/report` | Complete saved report with deterministic scores and disclaimer |
 | GET | `/jobs/{id}` | Owner-only safe status/result; trusted admin operational access |
+| POST | `/wat/sessions/{id}/paper/uploads` | Ordered private upload authorizations; strict 15-minute capabilities |
+| PUT | `/wat/sessions/{id}/paper/uploads/{upload_id}/content?token=...` | Authenticated binary relay, actual file/checksum validation, no upsert |
+| POST / GET | `/wat/sessions/{id}/paper/ocr` | Idempotent durable OCR enqueue / 20-row review draft |
+| PUT | `/wat/sessions/{id}/paper/confirm` | Revision-fenced canonical text and immediate image deletion/retry |
 
 Protected requests require a Supabase Auth user bearer token and publishable `apikey`. Candidate reads use a separate user-scoped REST client and existing RLS. A separate service client performs narrow RPC mutations using only the Auth-verified user UUID. Public SQL RPCs used by this service have no anonymous/authenticated execution grants. `qiyadat_history` has no actor argument and executes as the authenticated user with RLS. Editable user metadata never grants admin membership; future admin checks read `admin_users` through a trusted context.
 
@@ -84,6 +88,11 @@ The three verified Phase 1 migrations remain byte-for-byte unchanged. New migrat
 4. `20261016000100_feedback_foundation.sql`: quota/cap helpers, report requests and narrowly guarded technical session recovery.
 5. `20261016000200_feedback_worker.sql`: claim, dispatch authorization, retry, stale recovery, output validation and atomic completion.
 6. `20261016000300_feedback_reads.sql`: candidate RLS report reads and safe owner/admin job reads.
+7. `20261017000100_paper_operations.sql`: private relay authorization/leases, OCR quota/dispatch ledger, enqueue, confirmation and RLS draft reads.
+8. `20261017000200_ocr_worker.sql`: OCR claims/fencing, page checkpoints, retries/recovery, revision completion and safe cleanup operations.
+9. `20261017000300_paper_integration.sql`: guarded same-session OCR recovery/reruns, confirmed-paper eligibility in the existing report implementation and safe OCR job results.
+10. `20261017000400_paper_validation_contract.sql`: preparation page-field validation uses Section 6.1's VALIDATION_ERROR while OCR retains its specific completeness code.
+11. `20261017000500_paper_upload_recovery.sql`: service-verified upload/missing-object recovery on the same canonical session, without lifetime reset or overlapping active transfers.
 
 Seed remains exactly the original 20 `diagnostic-v1` words, with 15 seconds, 2000 ms grace, 280 code points and safe feature/quota defaults. No accounts, admins or payment offers are seeded. WAT configuration is enabled; OCR, feedback, payments and beta remain disabled.
 
@@ -96,7 +105,7 @@ Seed remains exactly the original 20 `diagnostic-v1` words, with 15 seconds, 200
 - Acceptance uses database statement receive time, never client timestamps. `client_elapsed_ms`, when supplied, remains response-time telemetry; absent simulation telemetry is derived from server receive time and capped at 15000 ms. Imported timing is always `client_reported`.
 - Natural finish before all simulation windows close reports actual completion and sets `ended_early`; future unattempted windows remain unattempted. Closed windows become blanks. No fabricated answers or future completion times are accepted.
 - Protected columns reserve trusted technical recovery on the same free session. Phase 2 exposes no recovery endpoint or worker. It never grants a fresh demo after an alleged client failure.
-- OCR, paper confirmation/uploads, payment/offer endpoints, admin screens, progress aggregation, privacy export/deletion workers, OTP delivery and frontend integration remain deferred. Phase 3 implements typed feedback only; paper report requests return `SESSION_STATE_CONFLICT`.
+- Payment/offer endpoints, admin screens, progress aggregation, privacy export/deletion workers, OTP delivery and frontend integration remain deferred. Unconfirmed paper report requests return `SESSION_STATE_CONFLICT`; confirmed paper uses the same Phase 3 report implementation.
 
 ## Feedback jobs and quotas
 
@@ -109,3 +118,20 @@ The worker uses five-minute processing leases, stale-lock recovery and at most t
 The root/backend empty environment examples include `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_PROMPT_VERSION`, `GEMINI_REQUEST_TIMEOUT_MS` and `QIYADAT_WORKER_SECRET`. No model is silently substituted. The specification's `gemini-3.5-flash-lite` is documented by Google as supporting text, structured output and a free tier (verified 2026-10-16). Free-tier prompts/output may improve Google products, which must be disclosed in the current AI-processing consent mechanism. Automated tests use only synthetic local mocks.
 
 The workspace is connected to `https://github.com/rafiullahshaikh/ISSB-APP` on `main`. Offline checks scan source for recognizable secrets, exclude ignored local CLI state, and compare original migration, specification and HTML hashes. Review `git status` before every commit; local runtime artifacts and real environment files must remain ignored.
+
+## Paper OCR and cleanup
+
+See `supabase/functions/_shared/paper/README.md` for the approved relay design,
+server-only Vision OAuth configuration, exact private paths, quota/worker rules,
+mapping, candidate confirmation, deletion and optional real-provider smoke test.
+The root/backend empty environment examples list all new variable names.
+`npm run worker:paper` invokes only the fixed local OCR and cleanup workers with
+the private worker secret. Production must schedule both; nothing hosted is
+linked, configured or deployed here.
+
+Run `test:ocr:unit`, `test:ocr:worker`, `test:paper:storage`, `test:vision:mock`,
+`test:paper:cleanup` and `test:ocr:http` through npm. No packages or real Google
+credentials are required. The HTTP runner uses disposable local Auth accounts,
+real private Storage and synthetic Vision/Gemini servers. It tests immediate
+deletion and temporarily unavailable Storage, then restores the container/flags
+and removes fixtures. All HTTP suites share the stack and must run serially.

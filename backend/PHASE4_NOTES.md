@@ -1,12 +1,14 @@
-# Phase 4 prerequisite investigation - 2026-10-17
+# Phase 4 decisions and investigation - 2026-10-17
 
-Phase 4 is **in progress, not complete**. The brief explicitly requires
+Phase 4 is **complete locally**; see VERIFICATION.md for the final clean reset,
+694 database assertions, 121 unit tests and 69 HTTP tests. The brief required
 resolving upload authorization expiry before implementing uploads, and stopping
-before changing the binding contract if the supported mechanism cannot meet it.
+before changing the binding contract if the supported mechanism could not meet it.
 At the initial investigation checkpoint no migration, API route, provider
 adapter, worker, Storage policy, feature flag, frontend file or hosted
-configuration had been changed. Implementation is now present and undergoing
-the full acceptance matrix; see the paper worker README and VERIFICATION.md.
+configuration had been changed. The historical findings below led to the user's
+explicit relay approval; they are not an unresolved blocker. Implementation,
+security and worker operation are documented in the paper worker README.
 
 ## Observed incompatibility
 
@@ -58,13 +60,13 @@ implementation. All nine existing migrations remain unchanged.
 
 The explicit API_SPEC.md revision permits a protected backend upload
 relay instead of requiring a direct signed Storage URL. A narrowly scoped,
-upload-only capability can bind user/session/upload, exact size/type/checksum,
-and a server-enforced expiry no later than the authorization row. The relay
-would reject inactive/expired rows and validate bytes before the isolated server
-client writes to the private bucket. It would not grant list/read permissions.
-The preparation response can keep its documented shape and PUT method, but its
-upload URL and the direct-upload rule must be deliberately updated. Exact relay
-route, capability and replay behavior must be documented before implementation.
+upload-only capability binds user/session/upload and the exact server expiry;
+the immutable row binds size/type/checksum. The relay rejects inactive/expired
+rows and validates bytes before the isolated server client writes to the
+private bucket. It grants no list/read permissions. The preparation response
+keeps its documented shape and PUT method, with the explicitly revised relay
+URL. Its exact route, capability and replay behavior were documented in the
+binding specification before implementation.
 
 OCR remains disabled in normal seed defaults. Do not
 silently substitute a two-hour transport token plus a fifteen-minute OCR check;
@@ -105,6 +107,18 @@ and HTTP suites were not rerun. The previous Phase 3 verification remains
 historical evidence, not a fresh claim that all suites passed in this phase.
 
 ## Implementation decisions
+
+- Verified relay/Storage failures before OCR must not strand the canonical demo.
+  A service-only failure record transitions an unconfirmed paper session to its
+  trusted technical-failure state. Preparation then removes old objects before
+  issuing fresh authorizations on the same session. It does not reset words,
+  timestamps or lifetime access. Active transfers must settle before retake.
+
+- Preparation page-count/ordering failures use VALIDATION_ERROR with safe field
+  details, as Section 6.1 requires. PAPER_UPLOAD_INCOMPLETE is reserved for the
+  OCR/upload-file completeness checks documented by Section 6.2 and the relay.
+  A final additive migration aligns these codes without rewriting a verified
+  migration or changing request/response JSON.
 
 - New authorizations use only protected relay URLs, never Storage transport
   tokens. A new restrictive policy blocks direct candidate writes to new paths;
@@ -150,3 +164,9 @@ historical evidence, not a fresh claim that all suites passed in this phase.
   https://github.com/supabase/storage/blob/v1.79.28/src/storage/protocols/s3/signature-v4.ts
 - Self-hosted configuration source:
   https://github.com/supabase/storage/blob/v1.79.28/src/config.ts
+- Vision handwriting requests and response hierarchy:
+  https://docs.cloud.google.com/vision/docs/handwriting
+- Vision REST endpoint and authorization scopes:
+  https://docs.cloud.google.com/vision/docs/reference/rest/v1/images/annotate
+- Service-account JWT/OAuth exchange:
+  https://developers.google.com/identity/protocols/oauth2/service-account
