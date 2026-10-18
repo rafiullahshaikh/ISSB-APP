@@ -242,5 +242,22 @@ select is(public.qiyadat_progress('7d')#>>'{weekly_comparison,current,sessions}'
 select is(public.qiyadat_progress('7d')#>>'{weekly_comparison,previous,sessions}','2','Previous weekly lower inclusive, upper exclusive, independent of selected range');
 select is(public.qiyadat_progress('7d')#>>'{weekly_comparison,changes,completion_percentage_points}','50.0','Completion change uses word percentage points');
 reset role;
+update public.wat_responses r set time_used_ms=1000000,client_elapsed_ms=1000000,received_at=s.started_at+interval '1 second'
+ from public.wat_sessions s where s.id=r.session_id and s.user_id=pg_temp.actor(601) and s.client_session_id='partial' and r.position=1;
+set local role authenticated;
+select set_config('request.jwt.claims','{"role":"authenticated","sub":"00000000-0000-0000-0000-000000000601"}',true);
+select is(public.qiyadat_progress('30d','none','simulation')#>>'{metrics,average_response_seconds}','13.6','Client elapsed telemetry cannot inflate verified simulation time');
+select is(private.progress_response_ms('simulation','typing','server_verified','2026-03-10T00:00:00Z',1,1000000,1000000,'2026-03-10T00:00:17Z'),15000,'Grace is not candidate response duration');
+select is(private.progress_response_ms('simulation','typing','server_verified','2026-03-10T00:00:00Z',1,1000000,1000000,null),null::integer,'Unverifiable client telemetry is excluded');
+select is(private.progress_response_ms('simulation','paper','server_verified','2026-03-10T00:00:00Z',1,15000,null,'2026-03-10T01:00:00Z'),15000,'Paper confirmation time is never treated as response timing');
+select is(private.progress_response_ms('simulation','paper','server_verified','2026-03-10T00:00:00Z',1,null,null,'2026-03-10T01:00:00Z'),null::integer,'Paper confirmation cannot invent missing timing');
+select is(private.progress_response_ms('training','typing','client_reported','2026-03-10T00:00:00Z',1,6500,6500,null),6500,'Training remains explicitly non-simulation telemetry');
+reset role;
+select pg_temp.session(606,'long-'||n,'2026-03-01T05:00:00Z'::timestamptz+n*interval '1 day') from generate_series(0,6)n;
+set local role authenticated;
+select set_config('request.jwt.claims','{"role":"authenticated","sub":"00000000-0000-0000-0000-000000000606"}',true);
+select is(public.qiyadat_progress('7d')#>>'{metrics,current_streak_days}','9','Selecting 7d does not truncate a longer current streak');
+select is(public.qiyadat_progress('7d','none','all','paper')#>>'{metrics,current_streak_days}','0','Mode filters apply to streak dates');
+reset role;
 select * from finish();
 rollback;

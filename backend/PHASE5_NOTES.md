@@ -16,9 +16,13 @@ All fourteen previous migrations and seven unrelated deletions are preserved.
   Completed words use response.completed; answers use status=answered, never OCR
   drafts. Completion percent is completed words / presented words, not finished
   sessions / sessions, consistent with api_statistics and Section 8's example.
-- Timing is response-weighted across completed positions with non-null stored
-  time_used_ms. Imported simulation timing is excluded. Imported training is
-  training telemetry. Legitimate paper timing remains; missing timing is null.
+- Timing is response-weighted across completed eligible positions. Imported
+  simulation timing is excluded. For server typed simulation, canonical
+  received_at minus the position opening time is authoritative and capped at
+  15 seconds: stored client_elapsed_ms/time_used_ms telemetry cannot override
+  it. Server-generated blank timer durations remain eligible. Paper confirmation
+  timestamps are not per-word timers; only legitimate stored paper timing is
+  retained. Imported training remains telemetry, and missing timing stays null.
 - Ready reports are final feedback_reports joined to a succeeded feedback job.
   Reuse deterministic overall_score. Processing/failed jobs have no final report.
   Public decimals round once to one decimal. Missing timing/score stays null.
@@ -70,3 +74,32 @@ existing error behavior. The new route/unit checkpoint passed 27 Node tests.
 All nine unit package commands then passed: 148 tests, comprising 121 preserved
 and 27 progress tests. Required full database lint has only the known Phase 1
 unused method parameter warning. Database checkpoint 72236b5 is pushed to main.
+
+The initial HTTP run stopped on a fixture expiry constraint: JavaScript Date
+truncated microseconds when adding 30 minutes to a synthetic start timestamp.
+HTTP fixtures now use millisecond instants; SQL tests retain exact microsecond
+boundary coverage. The failed run removed its accounts and restored the clock;
+no production calculation or migration needed changing.
+
+A final audit found Phase 2 deliberately retains client elapsed telemetry even
+on server sessions. The additional forward-only progress timing migration uses
+canonical typed receive times instead of trusting that telemetry for simulation
+analytics. It preserves Phase 1-4 writes/history/statistics and never derives
+paper timing from a later OCR confirmation. New SQL cases cover inflated client
+times, grace capping, unverifiable telemetry, paper nulls and long streaks.
+
+One development HTTP run saw a gateway restart and a dependency timeout while
+shared documentation was being edited under the local function watcher. Health
+and non-sensitive database wait checks were normal, no service had OOMKilled,
+and fixtures/clock were cleaned up. With files frozen the full 30-case run passed
+without retries. The final timing case expands this to 31; final verification
+results supersede these development runs. Source files must stay frozen while
+HTTP suites are running to avoid development reload interference.
+
+The final clean reset applied all sixteen migrations, exit 0. All 788 database
+assertions passed (694 preserved + 94 progress), and full lint retained only the
+known Phase 1 unused method parameter warning. One preceding reset exited before
+initialization during a local restart; no source changed, PostgreSQL was healthy,
+and the retry with the temporary Edge Runtime stopped passed. A final rollback
+benchmark with 1,000 imported simulation sessions and 20,000 responses completed
+the all-range RPC in 1030.980 ms. No extra index was justified or added.
