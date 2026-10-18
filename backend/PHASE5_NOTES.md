@@ -61,3 +61,12 @@ entire table. No speculative index was added. The benchmark fixture rolled back.
 The database initially needed filesystem recovery after an unclean local stop;
 its startup log reached ready-to-accept-connections before the successful reset.
 No Docker/WSL configuration change or missing-runtime download was performed.
+
+The API route uses the existing verified Auth context and its separate
+user-scoped client. Strict query parsing rejects unknown, repeated and unsupported
+values before the analytics RPC. Dependency errors on GET /progress map to the
+documented INTERNAL_ERROR without diagnostics; unrelated routes keep their
+existing error behavior. The new route/unit checkpoint passed 27 Node tests.
+All nine unit package commands then passed: 148 tests, comprising 121 preserved
+and 27 progress tests. Required full database lint has only the known Phase 1
+unused method parameter warning. Database checkpoint 72236b5 is pushed to main.

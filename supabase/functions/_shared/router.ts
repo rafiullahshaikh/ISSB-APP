@@ -11,11 +11,13 @@ import {safeLog} from './logging.ts';
 import type {Environment} from './env.ts';
 import {getJob,getReport,requestReport} from './feedback/reports.ts';
 import {paperMutation,receivePaper} from './paper/api.ts';
+import {readProgress} from './progress.ts';
 interface Route {name:string;methods:string[];public?:boolean;session?:string;position?:string;job?:string;upload?:string}
 function route(path:string):Route {
  if(path==='/health') return {name:'health',methods:['GET'],public:true};
  if(path==='/config/wat') return {name:'config',methods:['GET'],public:true};
  if(path==='/me') return {name:'account',methods:['GET','PATCH']};
+ if(path==='/progress') return {name:'progress',methods:['GET']};
  if(path==='/wat/sessions') return {name:'sessions',methods:['GET','POST']};
  if(path==='/wat/sessions/import') return {name:'import',methods:['POST']};
  let match=/^\/wat\/sessions\/([^/]+)\/paper\/uploads\/([^/]+)\/content$/.exec(path);
@@ -71,6 +73,7 @@ export function createApp(env:Environment,options:{fetcher?:typeof fetch;sink?:(
       headers.set('Cache-Control','private, no-store');headers.set('X-Request-Id',id);response=new Response(null,{status:204,headers});
      }else if(request.method==='GET') {
       if(name==='sessions') response=json(await history(url,context,cursors),200,id,headers);
+      else if(name==='progress') response=json({data:await readProgress(url,context)},200,id,headers);
       else {queryParameters(url,[]);let data:any;
        if(name==='account')data=accountObject(context);
        else if(name==='report')data=await getReport(session!,context);
@@ -95,7 +98,9 @@ export function createApp(env:Environment,options:{fetcher?:typeof fetch;sink?:(
      }
     }
    }
-  } catch (error) {const safe=normalizeError(error);code=safe.code;response=failure(safe,id,headers);}
+  } catch (error) {let safe=normalizeError(error);
+   if(name==='progress'&&request.method==='GET'&&!['AUTH_REQUIRED','AUTH_INVALID','VALIDATION_ERROR','INTERNAL_ERROR'].includes(safe.code))safe=new ApiError('INTERNAL_ERROR');
+   code=safe.code;response=failure(safe,id,headers);}
   try {safeLog({request_id:id,route:name,method:['GET','POST','PUT','PATCH','DELETE','OPTIONS','HEAD'].includes(request.method)?request.method:'OTHER',
    status:response.status,duration_ms:performance.now()-started,code},options.sink);} catch {/* Logging must not change an API result. */}
   return response;
