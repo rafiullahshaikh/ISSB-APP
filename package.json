@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "test:progress:unit": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/progress_unit_test.ts",
+    "test:progress:http": "node --experimental-strip-types backend/scripts/run_progress_http.ts",
     "test:ocr:unit": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/paper_unit_test.ts",
     "test:ocr:worker": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/paper_worker_test.ts",
     "test:paper:storage": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/paper_storage_test.ts",

@@ -1,7 +1,8 @@
 # Qiyadat Supabase backend
 
-Phase 4 is in progress, not complete. Its upload-expiry prerequisite was resolved
-by explicit user approval for a protected backend upload relay.
+Phases 1-5 are complete locally. Progress analytics and all preserved regression
+suites pass; see VERIFICATION.md. Phase 4's upload-expiry prerequisite
+was resolved by explicit user approval for a protected backend upload relay.
 The standard signed-upload transport lasts two hours and bypasses insertion
 RLS after issuance. See `PHASE4_NOTES.md` for the reproduced findings, S3
 limitations and the approved API_SPEC.md v1.1.1 contract decision. OCR remains
@@ -71,6 +72,7 @@ The HTTP suite reads local CLI status JSON into memory, refuses hosted URLs, cre
 | PUT | `/wat/sessions/{id}/paper/uploads/{upload_id}/content?token=...` | Authenticated binary relay, actual file/checksum validation, no upsert |
 | POST / GET | `/wat/sessions/{id}/paper/ocr` | Idempotent durable OCR enqueue / 20-row review draft |
 | PUT | `/wat/sessions/{id}/paper/confirm` | Revision-fenced canonical text and immediate image deletion/retry |
+| GET | `/progress` | Own timezone-aware totals, timing, scores, streak, weekly comparison, trends and recurring weak areas |
 
 Protected requests require a Supabase Auth user bearer token and publishable `apikey`. Candidate reads use a separate user-scoped REST client and existing RLS. A separate service client performs narrow RPC mutations using only the Auth-verified user UUID. Public SQL RPCs used by this service have no anonymous/authenticated execution grants. `qiyadat_history` has no actor argument and executes as the authenticated user with RLS. Editable user metadata never grants admin membership; future admin checks read `admin_users` through a trusted context.
 
@@ -93,6 +95,8 @@ The three verified Phase 1 migrations remain byte-for-byte unchanged. New migrat
 9. `20261017000300_paper_integration.sql`: guarded same-session OCR recovery/reruns, confirmed-paper eligibility in the existing report implementation and safe OCR job results.
 10. `20261017000400_paper_validation_contract.sql`: preparation page-field validation uses Section 6.1's VALIDATION_ERROR while OCR retains its specific completeness code.
 11. `20261017000500_paper_upload_recovery.sql`: service-verified upload/missing-object recovery on the same canonical session, without lifetime reset or overlapping active transfers.
+12. `20261018000100_progress_analytics.sql`: user-scoped, RLS-protected, set-based progress aggregation and a private server clock.
+13. `20261018000200_progress_verified_timing.sql`: canonical receive-time simulation analytics, excluding unverified elapsed telemetry without changing prior APIs.
 
 Seed remains exactly the original 20 `diagnostic-v1` words, with 15 seconds, 2000 ms grace, 280 code points and safe feature/quota defaults. No accounts, admins or payment offers are seeded. WAT configuration is enabled; OCR, feedback, payments and beta remain disabled.
 
@@ -105,7 +109,7 @@ Seed remains exactly the original 20 `diagnostic-v1` words, with 15 seconds, 200
 - Acceptance uses database statement receive time, never client timestamps. `client_elapsed_ms`, when supplied, remains response-time telemetry; absent simulation telemetry is derived from server receive time and capped at 15000 ms. Imported timing is always `client_reported`.
 - Natural finish before all simulation windows close reports actual completion and sets `ended_early`; future unattempted windows remain unattempted. Closed windows become blanks. No fabricated answers or future completion times are accepted.
 - Protected columns reserve trusted technical recovery on the same free session. Phase 2 exposes no recovery endpoint or worker. It never grants a fresh demo after an alleged client failure.
-- Payment/offer endpoints, admin screens, progress aggregation, privacy export/deletion workers, OTP delivery and frontend integration remain deferred. Unconfirmed paper report requests return `SESSION_STATE_CONFLICT`; confirmed paper uses the same Phase 3 report implementation.
+- Payment/offer endpoints, admin screens, privacy export/deletion workers, OTP delivery and frontend integration remain deferred. Unconfirmed paper report requests return `SESSION_STATE_CONFLICT`; confirmed paper uses the same Phase 3 report implementation.
 
 ## Feedback jobs and quotas
 
@@ -135,3 +139,42 @@ credentials are required. The HTTP runner uses disposable local Auth accounts,
 real private Storage and synthetic Vision/Gemini servers. It tests immediate
 deletion and temporarily unavailable Storage, then restores the container/flags
 and removes fixtures. All HTTP suites share the stack and must run serially.
+
+## Progress Analytics
+
+`GET /progress` accepts only `range=7d|30d|90d|all`,
+`compare=none|previous_period`, `practice_mode=all|training|simulation` and
+`response_mode=all|typing|paper`. Defaults are 30d, previous_period and both
+mode filters all. No entitlement, AI consent or enabled provider is required to
+read owned activity. Unknown, repeated and unsupported options return the
+standard VALIDATION_ERROR. Responses are private/no-store with request IDs.
+
+The user-scoped `qiyadat_progress` RPC derives auth.uid() and respects existing
+RLS. It accepts no owner, timezone, clock or raw SQL. It reads one consistent
+database snapshot, returns only Section 8 fields and makes no provider request.
+No new environment setting or dependency is required.
+
+Range boundaries use profile-local calendar dates, including today, converted
+independently to UTC for DST correctness. Completion is completed word positions
+over the immutable delivered words, not finished-session percentage. Imported
+simulation timing never enters verified simulation averages. Typed server
+simulation uses authoritative receive time, not a client elapsed claim, capped
+at 15 seconds; paper confirmation time is never a response timer. Missing scores
+and timing remain null. Streaks use distinct completed local dates and may end
+yesterday; mode filters apply, but the selected range does not truncate a streak.
+Weekly windows are independent of range; compare=none returns explicit null.
+Weaknesses must recur in two selected ready reports; directions compare weekly
+occurrence rates, and labels/drills reuse the latest eligible stored report.
+See PHASE5_NOTES.md for lifecycle, timing and insufficient-evidence decisions.
+
+```powershell
+npm.cmd run test:progress:unit
+npm.cmd run test:progress:http
+```
+
+The HTTP harness uses only the existing cached local runtime, real local Auth,
+RLS and disposable synthetic fixtures. A private analytics clock is fixed for
+the test and restored in finally; no public clock override exists. Run it
+serially with all other HTTP suites. It checks application runtime logs in
+memory and deletes fixture reports before deleting Auth accounts and dependent
+sessions/jobs. No Gemini or Vision configuration is needed for progress.

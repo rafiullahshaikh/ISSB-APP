@@ -1,6 +1,6 @@
 # Phase 5 progress analytics - 2026-10-18
 
-Implementation is in progress. API_SPEC.md v1.1.1 Section 8 remains unchanged.
+Phase 5 is complete locally. API_SPEC.md v1.1.1 Section 8 remains unchanged.
 Phase 4 evidence: 694 database assertions, 121 Node tests, 69 HTTP tests.
 All fourteen previous migrations and seven unrelated deletions are preserved.
 
@@ -103,3 +103,24 @@ initialization during a local restart; no source changed, PostgreSQL was healthy
 and the retry with the temporary Edge Runtime stopped passed. A final rollback
 benchmark with 1,000 imported simulation sessions and 20,000 responses completed
 the all-range RPC in 1030.980 ms. No extra index was justified or added.
+
+## Final Acceptance
+
+The final package-command matrix passed all 148 Node unit tests and all 100 HTTP
+tests: 31 progress, 20 preserved API, 18 feedback and 31 paper/OCR. No tests were
+skipped. Progress, feedback and paper runtime privacy checks passed. The progress
+harness restored the exact normal clock definition. Final inspection found zero
+Auth users, sessions, responses, reports/items, jobs, paper uploads and paper
+Storage objects; normal feature flags remain false. Provider safety ledgers may
+retain synthetic dispatch counts by design, not candidate data or queued work.
+
+No real Gemini, Vision, payment or hosted Supabase service was used. GitHub
+pushes are the only hosted project updates. No dependency/runtime was installed
+or updated, no Docker/WSL configuration changed, no new environment setting was
+added, and no frontend, payment, admin or privacy feature was implemented.
+The fourteen Phase 1-4 migrations, binding specification and original frontend
+hashes pass preservation checks. Seven unrelated deletions remain unstaged.
+
+Database checkpoint 72236b5, API checkpoint 2f8a012 and timing safeguard 11451d5
+were pushed independently. The final HTTP/documentation checkpoint follows them.
+See VERIFICATION.md for the exact commands and results. No blocker remains.

@@ -1,3 +1,65 @@
+# Phase 5 verification status - 2026-10-18
+
+**Phase 5 is complete locally.** GET /progress implements Section 8 with
+authenticated user-scoped RLS aggregation, profile-timezone calendar ranges,
+word completion, timing trust, ready-report scores, streaks, weekly comparison,
+stable trends and recurring weaknesses. API_SPEC.md v1.1.1 is unchanged.
+
+| Exact command/check | Final observed result |
+|---|---|
+| `node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' db reset --local` | PASS, exit 0. All sixteen migrations and original seed apply. All fourteen Phase 1-4 migrations remain unchanged. |
+| `node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' test db` | PASS, exit 0, `Files=5, Tests=788`: 694 preserved + 94 progress assertions. |
+| `node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' db lint --local --level warning` | Exit 0. Only the known Phase 1 unused `method` parameter in private.payment_transaction_hash, reserved for future provider-specific normalization. No new or unexplained warning. |
+| `npm.cmd run test:api:unit` | PASS, 22 tests, 0 failed/skipped. |
+| `npm.cmd run test:feedback:unit` | PASS, 34 tests, 0 failed/skipped. |
+| `npm.cmd run test:feedback:worker` | PASS, 6 tests, 0 failed/skipped. |
+| `npm.cmd run test:ocr:unit` | PASS, 17 tests, 0 failed/skipped. |
+| `npm.cmd run test:ocr:worker` | PASS, 10 tests, 0 failed/skipped. |
+| `npm.cmd run test:paper:storage` | PASS, 13 tests, 0 failed/skipped. |
+| `npm.cmd run test:vision:mock` | PASS, 14 tests, 0 failed/skipped. |
+| `npm.cmd run test:paper:cleanup` | PASS, 5 tests, 0 failed/skipped. |
+| `npm.cmd run test:progress:unit` | PASS, 27 tests, 0 failed/skipped. Total unit matrix: 148 (121 preserved + 27 new). |
+| `npm.cmd run test:progress:http` | PASS, exit 0, 31 tests, 0 failed/skipped; 48.969 seconds. Runtime privacy and exact normal clock restoration PASS. |
+| `npm.cmd run test:api:http` | PASS, exit 0, 20 preserved tests, 0 failed/skipped; 43.809 seconds. |
+| `npm.cmd run test:feedback:http` | PASS, exit 0, 18 preserved tests, 0 failed/skipped; 36.434 seconds. Runtime privacy PASS. |
+| `npm.cmd run test:ocr:http` | PASS, exit 0, 31 preserved tests, 0 failed/skipped; 133.316 seconds. Runtime privacy PASS. Total HTTP matrix: 100 tests. |
+| `python backend/scripts/verify_repository.py` | PASS, including original HTML/specification and all fourteen protected migration hashes, safe configuration and credential scan. |
+| `node backend/scripts/verify_frontend.cjs` | PASS, four original inline scripts parse and local links resolve. No frontend integration was implemented. |
+| Final fixture/clock/flag inspection | Zero Auth users, sessions, responses, reports/items, processing jobs, paper upload rows and paper Storage objects. OCR/feedback/payments/beta false. Private clock restored to statement_timestamp. |
+
+The dedicated SQL suite tests every option combination, empty/partial/finished/
+failed activity, typed/paper/training/simulation filters, exact microsecond
+7/30/90-day bounds, all-range start, Karachi UTC-date crossing, spring and autumn
+DST, yesterday/duplicate/gapped/long streaks, nullable and rounded metrics,
+half-open weekly windows, ready-versus-processing/failed reports, repeated
+weaknesses, latest label/drill, all direction cases and owner isolation. It also
+rejects inflated client simulation telemetry and never treats paper OCR
+confirmation as a response timer. The public RPC has no owner or clock input.
+
+The HTTP harness uses a private fixed analytics clock and real local Auth/RLS.
+Synthetic bearer/email sentinels cross only an in-memory test IPC channel, not
+tracked files or application logs. No new secret or environment setting is
+needed. Insufficient score/timing remains null; compare=none is explicit null.
+See PHASE5_NOTES.md for all semantics and resolved development-run failures.
+
+New files: two 20261018 progress migrations, `_shared/progress.ts`, the dedicated
+005 progress SQL suite, progress unit/HTTP tests, run_progress_http.ts and
+PHASE5_NOTES.md. Updated files: router.ts, package.json, shared README,
+backend README/VERIFICATION and verification_baseline.json. No old migration,
+provider implementation, binding API specification or environment example changed.
+
+Checkpoint commits 72236b5 (database), 2f8a012 (API) and 11451d5 (verified timing)
+are pushed to main; the final HTTP/documentation commit follows them. All seven
+pre-existing deletions remain untouched, unstaged and uncommitted. No real
+Gemini, Vision or payment request, hosted Supabase link/deploy, dependency update,
+runtime download or Docker/WSL configuration change occurred. Existing cached
+local components and synthetic provider mocks were used for regression tests.
+
+No unresolved blocker remains. Frontend dashboard integration, payments/admin,
+privacy export/deletion, Urdu/PDF and hosted deployment remain out of scope.
+
+---
+
 # Phase 4 verification status - 2026-10-17
 
 **Phase 4 is complete locally.** The approved protected upload relay, durable
@@ -63,7 +125,9 @@ documented trusted cleanup runner; API access expiry does not depend on it.
 
 # Phase 4 prerequisite investigation - historical checkpoint
 
-**Phase 4 is in progress, not complete.** The user approved a protected upload
+At this historical checkpoint Phase 4 was in progress. It is now complete as
+recorded above; these findings do not override that acceptance.
+The user approved a protected upload
 relay after the expiry investigation. API_SPEC.md v1.1.1 records the authorized
 contract change before implementation. See `PHASE4_NOTES.md`.
 
@@ -179,9 +243,10 @@ rubric vocabulary are recorded in `PHASE3_NOTES.md`; API_SPEC.md was unchanged.
 
 An initial GitHub push failed DNS resolution; the retry succeeded. The only
 database lint warning remains the Phase 1 payment hash parameter intentionally
-reserved for future provider-specific normalization. Phase 4 paper upload,
-OCR and candidate confirmation are not implemented. Payment, admin UI,
-progress, privacy workers and frontend integration remain deferred.
+reserved for future provider-specific normalization. At this Phase 3 checkpoint
+paper upload, OCR and candidate confirmation were not yet implemented; they
+subsequently passed Phase 4 above. Payment, admin UI, privacy workers and frontend
+integration remained deferred at that checkpoint.
 
 ---
 
