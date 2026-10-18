@@ -8,5 +8,10 @@
   "supabase/migrations/20261008000300_api_dispatch_and_reads.sql": "9b2c57482c36cbfca3bf86510548ec2e4182af966f4f85c044cdf46dbbf84e1e",
   "supabase/migrations/20261016000100_feedback_foundation.sql": "2299bbb2567b7d9028dd66c26697ca580fdfd1a47e579b70b4a578d0ac16313b",
   "supabase/migrations/20261016000200_feedback_worker.sql": "918a8524e0f69a3acd5abdde5047e27a04ebe5d512c337c33bf8fb48eb0e911f",
-  "supabase/migrations/20261016000300_feedback_reads.sql": "d38d3d598e0bfed72dc1827c9755dba2a272f6bf399bf833b5ade7c6f556113f"
+  "supabase/migrations/20261016000300_feedback_reads.sql": "d38d3d598e0bfed72dc1827c9755dba2a272f6bf399bf833b5ade7c6f556113f",
+  "supabase/migrations/20261017000100_paper_operations.sql": "75d296ca2823c0cd19486db65610d3664791728393f8c5ddc441d5c002e41fce",
+  "supabase/migrations/20261017000200_ocr_worker.sql": "7086bb0946979fb02a9217e6a1f8555e82ad7148b6e97efef93dda089dca5d14",
+  "supabase/migrations/20261017000300_paper_integration.sql": "c3d8a8540835e4f4f0532c9c9ca56b2fdeca3e41ac61a148faf67030537a1212",
+  "supabase/migrations/20261017000400_paper_validation_contract.sql": "f27a22e8e7da8cf2c3d3057ea1ee505f9cf916300a61e50b59eda2b3a3b60fc2",
+  "supabase/migrations/20261017000500_paper_upload_recovery.sql": "bc216ea72e5a0b90ef57f925a764d7f094abaf7d91bc470798ecbdad8c90cf41"
 }
