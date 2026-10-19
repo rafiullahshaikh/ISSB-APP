@@ -51,9 +51,10 @@ check(len(api_functions) >= 20 and all("set search_path = ''" in f for f in api_
       'Every new API function has a fixed empty search path')
 privileged_api = re.findall(r'create(?: or replace)? function .*?\$\$;', api_sql, re.S)
 check(all('security definer' not in f.lower() or
-          (f.startswith('create or replace function private.validate_session()')
+          ((f.startswith('create or replace function private.validate_session()')
+            or f.startswith('create function public.qiyadat_admin_payments('))
            and "set search_path = ''" in f) for f in privileged_api),
-      'New API operations use invoker privileges; existing session trigger retains its fixed definer context')
+      'API operations use invoker privileges except the guarded admin email projection and existing session trigger')
 check('revoke all on function public.qiyadat_mutate' in api_sql
       and 'from public,anon,authenticated' in api_sql
       and 'grant execute on function public.qiyadat_mutate' in api_sql,
