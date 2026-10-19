@@ -32,7 +32,7 @@ export function etagMatches(value:string|null,current:string):boolean {
  const normalize=(tag:string)=>tag.trim().replace(/^W\//i,'');
  return value.split(',').some(tag=>tag.trim()==='*' || normalize(tag)===normalize(current));
 }
-export async function parseJson(request:Request):Promise<Record<string,any>> {
+export async function parseJson(request:Request,rejectDuplicateFields=false):Promise<Record<string,any>> {
  if(request.headers.get('content-type')?.split(';')[0].trim().toLowerCase()!=='application/json') throw new ApiError('INVALID_REQUEST');
  if(!request.body) throw new ApiError('INVALID_JSON');
  const reader=request.body.getReader(); let bytes=0; const chunks:Uint8Array[]=[];
@@ -41,7 +41,21 @@ export async function parseJson(request:Request):Promise<Record<string,any>> {
  finally {reader.releaseLock();}
  const data=new Uint8Array(bytes); let offset=0; for(const chunk of chunks){data.set(chunk,offset);offset+=chunk.length;}
  let body:any;
- try {body=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(data));} catch {throw new ApiError('INVALID_JSON');}
+ let source:string;
+ try {source=new TextDecoder('utf-8',{fatal:true}).decode(data);body=JSON.parse(source);} catch {throw new ApiError('INVALID_JSON');}
+ if(rejectDuplicateFields){
+  // JSON is already syntactically valid. Track object keys, including escaped keys,
+  // without interpreting values or echoing any submitted content.
+  const stack:(Set<string>|null)[]=[];
+  const tokens=source!.match(/"(?:[^"\\]|\\.)*"|[{}\[\]:,]|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null/g)!;
+  for(let i=0;i<tokens.length;i++){
+   const token=tokens[i];if(token==='{')stack.push(new Set());else if(token==='[')stack.push(null);
+   else if(token==='}'||token===']')stack.pop();
+   else if(token.startsWith('"')&&tokens[i+1]===':'){
+    const keys=stack.at(-1)!,key=JSON.parse(token);if(keys.has(key))throw new ApiError('VALIDATION_ERROR',{fields:{body:'Duplicate properties are not allowed.'}});keys.add(key);
+   }
+  }
+ }
  if(!body || Array.isArray(body) || typeof body!=='object') throw new ApiError('VALIDATION_ERROR',{fields:{body:'Must be an object.'}});
  return body;
 }

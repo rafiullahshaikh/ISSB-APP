@@ -1,4 +1,4 @@
-export interface Environment {url:string; publishableKey:string; serviceKey:string; origins:Set<string>; release:string;publicApiUrl?:string}
+export interface Environment {url:string; publishableKey:string; serviceKey:string; origins:Set<string>; release:string;publicApiUrl?:string;paymentEncryptionKey?:string}
 export function readEnvironment(get:(name:string)=>string|undefined = name => {
  const globals=globalThis as any; return globals.Deno?.env.get(name) ?? globals.process?.env[name];
 }):Environment {
@@ -15,5 +15,5 @@ export function readEnvironment(get:(name:string)=>string|undefined = name => {
  const publicApiUrl=get('QIYADAT_PUBLIC_API_URL');
  if(publicApiUrl){const api=new URL(publicApiUrl);if(api.username||api.password||api.search||api.hash||api.pathname!=='/functions/v1/api/v1'||
   (api.protocol!=='https:'&&!(api.protocol==='http:'&&['localhost','127.0.0.1'].includes(api.hostname))))throw new Error('Invalid public API URL.');}
- return {url:parsed.origin,publishableKey,serviceKey,origins,release,...(publicApiUrl?{publicApiUrl}:{})};
+ return {url:parsed.origin,publishableKey,serviceKey,origins,release,...(publicApiUrl?{publicApiUrl}:{}),paymentEncryptionKey:get('PAYMENT_TRANSACTION_ENCRYPTION_KEY')};
 }

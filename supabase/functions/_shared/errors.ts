@@ -1,4 +1,5 @@
 export const errorStatus: Record<string, number> = {
+ PAYMENT_PENDING_EXISTS:409,TRANSACTION_ID_EXISTS:409,PAYMENT_ALREADY_DECIDED:409,PAYMENT_OFFER_INACTIVE:409,
  INVALID_JSON:400, INVALID_REQUEST:400, VALIDATION_ERROR:422, AUTH_REQUIRED:401, AUTH_INVALID:401,
  REAUTH_REQUIRED:401, FORBIDDEN:403, ADMIN_REQUIRED:403, ENTITLEMENT_REQUIRED:403, DIAGNOSTIC_ALREADY_USED:403,
  NOT_FOUND:404, IDEMPOTENCY_CONFLICT:409, CONFIG_VERSION_MISMATCH:409, SESSION_STATE_CONFLICT:409,
@@ -9,6 +10,8 @@ export const errorStatus: Record<string, number> = {
  OCR_CONFIRMATION_STALE:409,UPLOAD_EXPIRED:410,UPLOAD_TOO_LARGE:413,UNSUPPORTED_MEDIA_TYPE:415,PAPER_UPLOAD_INCOMPLETE:422,OCR_TEXT_INCOMPLETE:422,OCR_FAILED:502,
 };
 const messages: Record<string,string> = {
+ PAYMENT_PENDING_EXISTS:'A payment submission is already pending.',TRANSACTION_ID_EXISTS:'This transaction reference has already been submitted.',
+ PAYMENT_ALREADY_DECIDED:'This payment has already been decided.',PAYMENT_OFFER_INACTIVE:'This payment offer is not currently available.',
  OCR_CONFIRMATION_STALE:'The OCR draft changed. Review the current revision.',UPLOAD_EXPIRED:'This temporary upload has expired.',
  UPLOAD_TOO_LARGE:'The image or combined upload is too large.',UNSUPPORTED_MEDIA_TYPE:'Only supported image formats are accepted.',
  PAPER_UPLOAD_INCOMPLETE:'The required paper pages are missing, invalid or unordered.',OCR_TEXT_INCOMPLETE:'Confirm every position exactly once.',
