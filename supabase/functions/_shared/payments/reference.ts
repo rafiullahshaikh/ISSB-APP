@@ -3,8 +3,9 @@ import {sha256} from '../idempotency.ts';
 const utf8=new TextEncoder();
 export const paymentMethods=['easypaisa','jazzcash','bank_transfer'];
 export function normalizeReference(value:unknown):string {
- if(typeof value!=='string'||value.length>10000||/[\p{Cc}\p{Cf}\p{Cs}]/u.test(value))invalid('transaction_id','Invalid transaction reference.');
+ if(typeof value!=='string'||/\p{Cs}/u.test(value))invalid('transaction_id','Invalid transaction reference.');
  const normalized=value.normalize('NFC').trim();
+ if(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u.test(normalized))invalid('transaction_id','Invalid transaction reference.');
  if(!normalized||[...normalized].length>100)invalid('transaction_id','Must contain 1 to 100 Unicode code points.');
  return normalized;
 }

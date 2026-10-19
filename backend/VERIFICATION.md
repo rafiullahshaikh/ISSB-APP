@@ -1,3 +1,92 @@
+# Phase 6 verification status - 2026-10-19
+
+Phase 6 is complete locally. All six API_SPEC.md v1.1.1 Section 9 routes pass
+acceptance; the binding specification and sixteen earlier migrations are
+unchanged. All required final suites pass with zero skipped tests.
+
+| Exact command/check | Observed result |
+|---|---|
+| `node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' db reset --local` | PASS, exit 0, all nineteen migrations and original seed. |
+| `node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' test db` | PASS before and after final HTTP cleanup, exit 0, Files=8, Tests=892: 788 preserved + 40 payment primitives + 49 admin + 13 protection/rollback assertions. Final run 20 wall-clock seconds. |
+| `node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' db lint --local --level warning` | Exit 0. Only known Phase 1 unused method parameter in private.payment_transaction_hash. No new/unexplained warning. |
+| `npm.cmd run test:payments:unit` | PASS, 28 tests, 0 failed/skipped. |
+| `npm.cmd run test:payments:crypto` | PASS, 16 tests, 0 failed/skipped. |
+| `npm.cmd run test:api:unit` | PASS, 22 tests, 0 failed/skipped. |
+| `npm.cmd run test:feedback:unit` | PASS, 34 tests, 0 failed/skipped. |
+| `npm.cmd run test:feedback:worker` | PASS, 6 tests, 0 failed/skipped. |
+| `npm.cmd run test:ocr:unit` | PASS, 17 tests, 0 failed/skipped. |
+| `npm.cmd run test:ocr:worker` | PASS, 10 tests, 0 failed/skipped. |
+| `npm.cmd run test:paper:storage` | PASS, 13 tests, 0 failed/skipped. |
+| `npm.cmd run test:vision:mock` | PASS, 14 tests, 0 failed/skipped. |
+| `npm.cmd run test:paper:cleanup` | PASS, 5 tests, 0 failed/skipped. |
+| `npm.cmd run test:progress:unit` | PASS, 27 tests, 0 failed/skipped. Unit matrix total 192 (148 preserved + 44 payment). |
+| `npm.cmd run test:payments:http` | PASS, exit 0, 38 tests, 0 failed/skipped, 39.088 seconds. Runtime privacy and fixture/flag cleanup PASS. |
+| `npm.cmd run test:feedback:http` | PASS, exit 0, 18 tests, 0 failed/skipped, 24.980 seconds. Runtime privacy PASS. |
+| `npm.cmd run test:ocr:http` | PASS, exit 0, 31 tests, 0 failed/skipped, 99.224 seconds. Runtime privacy and Storage recovery PASS. |
+| `npm.cmd run test:progress:http` | PASS, exit 0, 31 tests, 0 failed/skipped, 23.816 seconds. Runtime privacy and exact clock restoration PASS. |
+| `npm.cmd run test:api:http` | PASS, exit 0, 20 tests, 0 failed/skipped, 24.772 seconds. Final HTTP total 138 (100 preserved + 38 payment). |
+| `python backend/scripts/verify_repository.py` | PASS, original HTML/spec and all nineteen migration hashes, guarded admin projection, empty environment examples and credential scan. |
+| `node backend/scripts/verify_frontend.cjs` | PASS, four original inline scripts parse and local links resolve. |
+| `git -c core.whitespace=cr-at-eol diff --check` | PASS, exit 0. |
+| Final fixture inspection | Zero Auth users/profiles/admins, payment offers/submissions, entitlements, audits, sessions/responses, reports/items, jobs, paper uploads and Storage objects. All four normal feature flags false; private analytics clock restored. No hosted project-ref file. |
+
+New migrations: 20261019000100_payment_primitives.sql,
+20261019000200_payment_admin.sql, 20261019000300_payment_text_protection.sql.
+New SQL suites: 006_payments_test.sql, 007_payment_admin_test.sql and
+008_payment_protection_test.sql. New Edge modules: payments/reference.ts,
+payments/api.ts and payments/README.md; router, shared configuration, errors and
+bounded JSON parsing reuse the existing API conventions. The dedicated unit,
+crypto and HTTP suites use no packages or real payment-provider requests.
+
+AES-256-GCM uses random nonces and provider/hash associated data. The versioned
+bytea ciphertext contains no plaintext reference; normal candidates receive
+masks only. The encryption key is canonical base64 of 32 bytes, supplied outside
+the repository/database. Test keys exist exclusively in process/named-pipe memory.
+Admin decryption is limited to the returned page after allowlist authorization.
+The admin list's guarded definer context projects Auth email without broad Auth
+table grants. Other payment functions use invoker privileges and narrow service
+execution; candidate history retains JWT/RLS and has no owner argument.
+
+Payment snapshots/idempotency/pending uniqueness are atomic. Admin decisions
+serialize profile and payment access, extend captured paid duration, keep beta
+separate and commit one immutable audit with the entitlement/payment. Rejected
+references remain reserved. Exact references are excluded from free text using
+a bounded hash scan. Audit failure rolls back all decision effects; service
+UPDATE/DELETE/TRUNCATE and table-owner UPDATE/DELETE are denied/guarded.
+
+See PHASE6_NOTES.md for decisions, development-run corrections and scope. Three
+checkpoints are pushed: 86572ff, 4ad815a, ac9ce16. The final verification commit
+records acceptance after them. Seven unrelated deletions and an unrelated B2B planning file remain
+untouched. No hosted deployment/link, dependency install/upgrade, Docker/WSL
+configuration change or real provider call has occurred.
+
+Two development matrix transitions failed before later isolated passing runs:
+progress returned gateway 502 for two early auth cases, then initial 500/503
+dependency responses; 26/31 passed and all fixture/clock cleanup still succeeded.
+A later feedback run failed during initial setup with 500 on configuration,
+before its subtests. Both failures are retained here. Function sources were
+frozen; runtime inspection showed no OOM/restart/boot-error evidence, and repeated
+health/config/auth probes subsequently passed. Exact root cause is not proven;
+local runtime startup/configuration transitions are a remaining harness risk.
+Fresh/settled individual runs then passed every assertion, without automatic
+test-case retries. No application behavior or assertion was weakened to get a pass.
+
+An extra post-HTTP database command timed out connecting through the host before
+running any assertion. PostgreSQL was accepting connections; the temporary Edge
+Runtime was stopped, and the same required command then passed all 892 tests.
+Core local DB/Auth/Storage/gateway services remain healthy. A separate academy
+planning commit (7140922) appeared during the work and was preserved unchanged;
+it is outside the Phase 6 implementation.
+
+Final normalization review removed an undocumented raw 10,000-character cap:
+the contract bounds normalized text, and the shared HTTP body limit already
+bounds input. Surrounding whitespace is trimmed before validating embedded
+controls; Unicode line/paragraph separators are rejected. The updated 44 payment
+unit/encryption cases and 38 HTTP cases passed on the final source. All 148
+preserved unit cases were rerun; final individual HTTP results are above.
+
+---
+
 # Phase 5 verification status - 2026-10-18
 
 **Phase 5 is complete locally.** GET /progress implements Section 8 with

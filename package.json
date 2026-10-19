@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:payments:http": "node --experimental-strip-types backend/scripts/run_payments_http.ts",
     "test:payments:unit": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/payments_unit_test.ts",
     "test:payments:crypto": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/payments_crypto_test.ts",
     "test:progress:unit": "node --experimental-strip-types --test-isolation=none --test supabase/functions/tests/progress_unit_test.ts",

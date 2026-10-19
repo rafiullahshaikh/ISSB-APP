@@ -13,5 +13,10 @@
   "supabase/migrations/20261017000200_ocr_worker.sql": "7086bb0946979fb02a9217e6a1f8555e82ad7148b6e97efef93dda089dca5d14",
   "supabase/migrations/20261017000300_paper_integration.sql": "c3d8a8540835e4f4f0532c9c9ca56b2fdeca3e41ac61a148faf67030537a1212",
   "supabase/migrations/20261017000400_paper_validation_contract.sql": "f27a22e8e7da8cf2c3d3057ea1ee505f9cf916300a61e50b59eda2b3a3b60fc2",
-  "supabase/migrations/20261017000500_paper_upload_recovery.sql": "bc216ea72e5a0b90ef57f925a764d7f094abaf7d91bc470798ecbdad8c90cf41"
+  "supabase/migrations/20261017000500_paper_upload_recovery.sql": "bc216ea72e5a0b90ef57f925a764d7f094abaf7d91bc470798ecbdad8c90cf41",
+  "supabase/migrations/20261018000100_progress_analytics.sql": "579fd543cd5a38b029b474e5181ec90688ebb804d22613da7ba56016f7d86069",
+  "supabase/migrations/20261018000200_progress_verified_timing.sql": "c504727ae384208ce043381cc52c0bfffc59af19773937c5ce5b10bf70363b78",
+  "supabase/migrations/20261019000100_payment_primitives.sql": "853bd8a48a8e1a81fdc90eef37c2ed892b35e45a4970b2a4114d3b2ede98afe3",
+  "supabase/migrations/20261019000200_payment_admin.sql": "fea50d869cae633ae60eb173af9d3e8ff11b28cdb230ea330a0e5b49890ba91c",
+  "supabase/migrations/20261019000300_payment_text_protection.sql": "48fa8587e299ec1970effcbb57fab9b1b878387f1901cfd76e0f795815b79532"
 }

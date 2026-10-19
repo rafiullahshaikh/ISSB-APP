@@ -1,7 +1,7 @@
 # Qiyadat Supabase backend
 
-Phases 1-5 are complete locally. Progress analytics and all preserved regression
-suites pass; see VERIFICATION.md. Phase 4's upload-expiry prerequisite
+Phases 1-6 are complete locally. Manual payment verification and all preserved
+regression suites pass; see VERIFICATION.md. Phase 4's upload-expiry prerequisite
 was resolved by explicit user approval for a protected backend upload relay.
 The standard signed-upload transport lasts two hours and bypasses insertion
 RLS after issuance. See `PHASE4_NOTES.md` for the reproduced findings, S3
@@ -73,8 +73,14 @@ The HTTP suite reads local CLI status JSON into memory, refuses hosted URLs, cre
 | POST / GET | `/wat/sessions/{id}/paper/ocr` | Idempotent durable OCR enqueue / 20-row review draft |
 | PUT | `/wat/sessions/{id}/paper/confirm` | Revision-fenced canonical text and immediate image deletion/retry |
 | GET | `/progress` | Own timezone-aware totals, timing, scores, streak, weekly comparison, trends and recurring weak areas |
+| GET | `/payment-offers` | Public current reviewed offers, benefits, short cache and ETag |
+| POST | `/payments` | Encrypted reference, offer snapshot, required idempotency and one pending submission |
+| GET | `/payments` | Own masked submission history with opaque cursors |
+| GET | `/admin/payments` | Active allowlisted admin review, filters and exact reference search |
+| POST | `/admin/payments/{id}/approve` | Atomic paid access, immutable decision and audit |
+| POST | `/admin/payments/{id}/reject` | Atomic candidate-safe rejection and immutable audit |
 
-Protected requests require a Supabase Auth user bearer token and publishable `apikey`. Candidate reads use a separate user-scoped REST client and existing RLS. A separate service client performs narrow RPC mutations using only the Auth-verified user UUID. Public SQL RPCs used by this service have no anonymous/authenticated execution grants. `qiyadat_history` has no actor argument and executes as the authenticated user with RLS. Editable user metadata never grants admin membership; future admin checks read `admin_users` through a trusted context.
+Protected requests require a Supabase Auth user bearer token and publishable `apikey`. Candidate reads use a separate user-scoped REST client and existing RLS. A separate service client performs narrow RPC mutations using only the Auth-verified user UUID. Public SQL RPCs used by this service have no anonymous/authenticated execution grants. `qiyadat_history` has no actor argument and executes as the authenticated user with RLS. Editable user metadata never grants admin membership; admin checks read `admin_users` through a trusted context.
 
 Mutations strictly reject unknown properties. Errors and logs expose safe codes and field validation messages, never SQL diagnostics or request content. CORS never reflects arbitrary origins. Authenticated responses use `private, no-store`. Idempotency stores canonical JSON hashes and exact response status/body for at least 24 hours; the table is service-only. Profile locking serializes simultaneous requests per account. Rate counters are in a private, forced-RLS table.
 
@@ -109,7 +115,7 @@ Seed remains exactly the original 20 `diagnostic-v1` words, with 15 seconds, 200
 - Acceptance uses database statement receive time, never client timestamps. `client_elapsed_ms`, when supplied, remains response-time telemetry; absent simulation telemetry is derived from server receive time and capped at 15000 ms. Imported timing is always `client_reported`.
 - Natural finish before all simulation windows close reports actual completion and sets `ended_early`; future unattempted windows remain unattempted. Closed windows become blanks. No fabricated answers or future completion times are accepted.
 - Protected columns reserve trusted technical recovery on the same free session. Phase 2 exposes no recovery endpoint or worker. It never grants a fresh demo after an alleged client failure.
-- Payment/offer endpoints, admin screens, privacy export/deletion workers, OTP delivery and frontend integration remain deferred. Unconfirmed paper report requests return `SESSION_STATE_CONFLICT`; confirmed paper uses the same Phase 3 report implementation.
+- Admin screens, privacy export/deletion workers, OTP delivery and frontend integration remain deferred. Unconfirmed paper report requests return `SESSION_STATE_CONFLICT`; confirmed paper uses the same Phase 3 report implementation.
 
 ## Feedback jobs and quotas
 
@@ -178,3 +184,64 @@ the test and restored in finally; no public clock override exists. Run it
 serially with all other HTTP suites. It checks application runtime logs in
 memory and deletes fixture reports before deleting Auth accounts and dependent
 sessions/jobs. No Gemini or Vision configuration is needed for progress.
+
+## Manual Payments
+
+All six Section 9 routes use the shared API conventions. Payments are external;
+Qiyadat records a reference and an admin decision. No payment provider is called.
+Normal seed retains payments_enabled=false and contains no offers or admins.
+See PHASE6_NOTES.md and the shared payments README for implementation decisions.
+
+Supply PAYMENT_TRANSACTION_ENCRYPTION_KEY only through server secrets or an
+untracked local environment file outside the repository. It must be canonical
+base64 encoding of 32 random bytes. Never print or commit it. Start the local API:
+
+```powershell
+node 'C:\Users\windows10\node_modules\supabase\dist\supabase.js' functions serve api --no-verify-jwt --env-file '<outside-repository-local-env-file>'
+npm.cmd run test:payments:unit
+npm.cmd run test:payments:crypto
+npm.cmd run test:payments:http
+```
+
+The API remains http://127.0.0.1:55321/functions/v1/api/v1. The HTTP runner starts
+only the installed cached runtime. It passes a synthetic encryption key through
+a Windows named pipe and in-memory child environment; no key file is created.
+Real local Auth sessions use disposable .invalid accounts, as in earlier suites.
+Run all HTTP suites serially, with shared function files frozen during the run.
+
+New migrations are 20261019000100_payment_primitives.sql (reviewed benefits,
+submission, history and rate settings), 20261019000200_payment_admin.sql (admin
+projection, decisions and entitlements), and 20261019000300_payment_text_protection.sql
+(reference exclusion from decision text and service audit TRUNCATE revocation).
+The sixteen earlier migrations remain unchanged.
+
+Candidate history uses user JWT/RLS. Only the service client may submit or decide,
+and admin membership is checked again inside each transaction. The guarded admin
+list needs a fixed-search-path definer context only to project Auth email; it
+does not grant general Auth table access. Decisions serialize candidate access,
+use captured offer duration, create contiguous paid windows, and write one audit
+entry in the same transaction. Beta and report reservations remain independent.
+
+Submission allows 5 attempts/minute; admin list and decisions allow 60/minute.
+Reference normalization preserves case/separators. AES-256-GCM authenticates a
+versioned ciphertext using a fresh nonce and provider/hash associated data.
+Candidate responses contain masks; decryption occurs only for returned admin
+review rows. Preserve the encryption key while those rows exist. Key rotation
+requires a future versioned migration and keyring design, not overwriting the key.
+
+Tests temporarily enable flags and create synthetic offers/admins, then restore
+flags and remove fixtures in finally. Immutable audit fixture cleanup uses only
+the local test-superuser's transaction-local replication setting; normal service
+update/delete/truncate is denied and tested. No production trigger is disabled.
+Free-form note validation rejects common credential and transcript patterns but
+cannot classify all personal prose. Operators must use brief verification
+summaries. The exact submitted reference is prohibited anywhere in decision text
+using hash comparisons, including short/multiword references, without decryption.
+No automatic verification, screenshots, WhatsApp storage, frontend, subscription
+expansion, privacy workers or hosted deployment is included.
+
+Local HTTP startup was intermittently unstable while changing served runtime
+configurations (gateway 502 and early setup 500); healthy isolated runs passed
+every test. Keep failure evidence, inspect runtime/health/configuration first,
+and run suites serially without concurrent source edits. Do not add automatic
+retries around test assertions. See VERIFICATION.md for the observed runs.

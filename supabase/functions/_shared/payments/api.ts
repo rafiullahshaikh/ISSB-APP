@@ -13,8 +13,8 @@ export function paymentBody(body:Record<string,any>){
  return {offer_code:text(body.offer_code,'offer_code',1,80),payment_method:choice(body.payment_method,'payment_method',paymentMethods),transaction_id:normalizeReference(body.transaction_id)};
 }
 export function safePaymentText(value:unknown,name:string):string {
- const normalized=text(value,name,1,10000).normalize('NFC').trim();text(normalized,name,1,500);
- if(/[\p{Cc}\p{Cf}\p{Cs}<>]/u.test(normalized)||/https?:|www\.|\S+@\S+|\b(?:password|secret|api[_ -]?key|bearer|token|iban|account\s*(?:number|no))\b|\b[A-Za-z0-9_+\/-]{32,}\b|\b\d{10,}\b|\b(?:sender|recipient|customer|admin|user)\s*:/i.test(normalized))invalid(name,'Use a brief plain-text verification summary without private data.');
+ const normalized=text(value,name,1,131072).normalize('NFC').trim();text(normalized,name,1,500);
+ if(/[\p{Cc}\p{Cf}\p{Cs}\p{Zl}\p{Zp}<>]/u.test(normalized)||/https?:|www\.|\S+@\S+|\b(?:password|secret|api[_ -]?key|bearer|token|iban|account\s*(?:number|no))\b|\b[A-Za-z0-9_+\/-]{32,}\b|\b\d{10,}\b|\b(?:sender|recipient|customer|admin|user)\s*:/i.test(normalized))invalid(name,'Use a brief plain-text verification summary without private data.');
  return normalized;
 }
 export function decisionBody(operation:string,body:Record<string,any>){
@@ -33,6 +33,7 @@ export function paymentQuery(url:URL,admin=false){
 }
 export async function submitPayment(body:Record<string,any>,key:string,context:AuthContext,service:SupabaseClient,env:Environment){
  const value=paymentBody(body),hash=await referenceHash(value.transaction_id);
+ if(context.account?.features?.payments_enabled!==true)throw new ApiError('FEATURE_DISABLED');
  const ciphertext=await encryptReference(value.transaction_id,value.payment_method,hash,env.paymentEncryptionKey);
  const result=await service.rpc('qiyadat_payment_submit',{p_actor:context.id,p_key:key,p_body:{offer_code:value.offer_code,payment_method:value.payment_method,transaction_hash:hash},
   p_ciphertext:ciphertext,p_hash:hash,p_masked:maskReference(value.transaction_id)});

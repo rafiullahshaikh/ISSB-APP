@@ -61,6 +61,18 @@ check('revoke all on function public.qiyadat_mutate' in api_sql
       'Trusted dispatcher has explicit revocation and service-only grant')
 check('force row level security' in api_sql and 'private.api_rate_windows' in api_sql,
       'Private rate counters use forced RLS')
+payment_admin = (ROOT / 'supabase/migrations/20261019000200_payment_admin.sql').read_text(encoding='utf-8')
+check('perform private.api_actor(p_actor);perform private.payment_admin(p_actor)' in payment_admin
+      and 'from public,anon,authenticated' in payment_admin
+      and 'to service_role' in payment_admin,
+      'Admin payment projection checks service actor and allowlist with no browser execution')
+check('left join auth.users' in payment_admin and 'grant select' not in payment_admin,
+      'Admin email projection adds no general Auth table grant')
+check('order by id for update' in payment_admin and 'insert into public.admin_audit_log' in payment_admin,
+      'Payment decisions serialize profile access and insert audit transactionally')
+check('revoke truncate on public.admin_audit_log from service_role' in api_sql
+      and 'private.payment_text_has_reference' in api_sql,
+      'Payment decision text excludes references and service audit truncate is revoked')
 check((ROOT / 'supabase/tests/database/002_api_test.sql').exists()
       and (ROOT / 'supabase/functions/tests/api_http_test.ts').exists(),
       'New database and real HTTP test suites exist')

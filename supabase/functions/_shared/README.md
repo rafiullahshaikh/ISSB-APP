@@ -11,6 +11,7 @@
 - `sessions.ts`: candidate detail/history reads through RLS, safe reference projection.
 - `progress.ts`: strict analytics query options and one user-scoped progress RPC; calendar/timing/score calculations remain in PostgreSQL with RLS. See `backend/PHASE5_NOTES.md`.
 - `logging.ts`: explicit operational log allowlist; never pass request bodies or raw errors.
+- `payments/`: strict payment queries/bodies, AES-GCM reference protection, candidate RLS history and guarded admin review/decisions. See `payments/README.md`.
 - `feedback/`: strict report schema, prompts, output validation, scoring, Gemini adapter, report serialization, retry decisions and durable worker orchestration. See `feedback/README.md`.
 - `paper/`: owner-bound upload capabilities, bounded image/container/checksum validation, isolated private Storage, Vision OAuth/adapter, review mapping, transactional confirmation, OCR worker and cleanup. See `paper/README.md`. The v1.1.1 upload relay contract was explicitly approved after verifying standard signed-upload expiry incompatibility.
 
